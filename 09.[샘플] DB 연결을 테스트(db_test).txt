@@ -11,7 +11,7 @@
 <%
 
             Class.forName ("oracle.jdbc.driver.OracleDriver"); 
-            Connection conn = DriverManager.getConnection ("jdbc:oracle:thin:@33.50.10.17:1521:uniabs", "vpnet", "vpnet");
+            Connection conn = DriverManager.getConnection ("jdbc:oracle:thin:@33.50.XX:1521:uniabs", "vpnet", "vpnet");
             System.out.println("OK!");
            
             PreparedStatement stmt = conn.prepareStatement(
