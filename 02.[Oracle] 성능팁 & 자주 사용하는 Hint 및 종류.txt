@@ -1,0 +1,255 @@
+- 가능한한 HAVING절의 사용을 피한다. 
+
+Having절은 GROUP BY에 의한 결과를 제한할때 사용한다. GROUP BY에 Having절을 사용하였을 경우 GROUP BY에 의해서 결과들을 모두 집계한 다음 Having절에 명시한 조건으로 맞지 않는 결과를 버리게 된다. 대부분의 경우 Having절의 필요없이 GROUP BY와 Where절만으로 원하는 결과를 얻을 수 있다. 
+
+
+- 가능한한 DISTINCT 문의 사용을 피한다. 
+
+DISTINCT문을 사용할 경우 소트에 따른 성능 하락이 있기 때문에 꼭 필요한 경우에만 사용한다. 
+
+- 가능한한 UNION 대신에 UNION ALL을 사용한다. 
+UNION ALL이 UNION보다 훨씬 빠르다. 왜냐하면 UNION ALL은 로우의 중복검사를 하지않는 반면에 UNION은 중복행이 있건없건간에 중복검사를 수행하기 때문이다. 
+
+
+1. 자주 사용되는 Hint
+
+  /*+ CLUSTER(table_name) */  
+  Cluster Scan을 선택하도록 지정한다. 따라서 clustered object들에만 적용된다.
+
+ 
+
+  /*+ INDEX(table_name index_name) */  
+  지정된 index사용하도록 지정한다.
+
+ 
+
+  /*+ INDEX_ASC(table_name index_name) */  
+  지정된 index를 오름차순으로 사용하도록 지정한다. Default로 Index Scan은 오름차순이다 
+
+ 
+
+  /*+ INDEX_DESC(table_name index_name) */  
+  지정된 index를 내림차순으로 사용하도록 지정한다.
+
+ 
+
+ 
+
+2. Hint의 종류
+
++ ALL_ROWS
+- /*+ ALL_ROWS */
+- 통계 데이터의 유무에 상관없이 Cost-Based 방식의 최적화를 한다. 
+ Best Throughput(처리량)이 목적.
+
+ 
+
++ FIRST_ROWS
+- /*+ FIRST_ROWS */
+- Cost-Based Optimization, Best Response Time 목적 
+
+ 
+
++ CHOOSE
+- /*+ CHOOSE */
+- Table, Cluster, Index 등이 Optimization을 위한 통계 데이터를 가지고 있으며 Cost-Based 
+ 방식으로 Optimization을 하고 통계 데이터가 없으면 
+Rule-Based 방식으로 한다.
+
+ 
+
++ RULE
+- /*+ RULE */
+- 한 SQL문 block에 대해 rule-based optimization을 선택.
+
+ 
+
++ FULL
+- /*+ FULL(table) */
+- 테이블에 대해 full table scan을 선택
+
+ 
+
++ ROWID
+- /*+ ROWID(table) */
+- 테이블에 대해 ROWID에 의한 table scan을 선택
+
+ 
+
++ CLUSTER
+- /*+ CLUSTER(table) */
+- Cluster Scan을 선택하도록 지정한다. 따라서 clustered object들에만 적용된다
+
+ 
+
++ HASH
+- /*+ HASH(table) */
+- CLUSTER 에 저장된 TABLE에만 적용됨, 테이블에 대해 HASH scan을 선택.
+
+ 
+
++ HASH_AJ
+- /*+ HASH_AJ */
+- a NOT IN subquery -> a hash anti-join 으로 transformation.
+
+ 
+
++ HASH_SJ
+- /*+ HASH_SJ */
+- a correlated EXISTS subquery -> a hash semi-join 으로 transformation.
+
+ 
+
++ INDEX
+- /*+ INDEX(table index1 index2 index3 ...) */
+- 지정된 index사용하도록 지정한다
+- in list predicat에 대해서도 가능.
+- Multi-column inlists 는 index 를 사용할 수 없다.
+
+ 
+
++ INDEX_ASC
+- /*+ INDEX_ASC(table index1 index2 index3 ...) */
+- INDEX HINT 와 동일, 오름차순으로 사용하도록 지정한다
+
+ 
+
++ INDEX_DESC
+- /*+ INDEX_DESC(table index1 index2 index3 ...) */
+- 지정된 index를 내림차순으로 사용하도록 지정한다.
+
+ 
+
++ INDEX_FFS
+- /*+ INDEX_FFS(table index1 index2 index3 ...) */
+- fast full index scan
+
+ 
+
++ MERGE_AJ
+- /*+ MERGE_AJ */
+- a NOT IN subquery -> a merge anti-join 으로 transformation.
+
+ 
+
++ MERGE_SJ
+- /*+ MERGE_SJ */
+- a correlated EXISTS subquery -> a merge semi-join 으로 transformation.
+
+ 
+
++ AND_EQUAL
+- /*+ AND_EQUAL(table index1 index2 ... index5) */
+- 적어도 2개 이상의 index를 지정해야 하고, max로 5개까지 지정 가능.
+- 몇몇의 single-column index에대한 scan을 merge하는 access path를 사용하는 
+ execution plan을 선택
+
+ 
+
++ USE_CONCAT
+- /*+ USE_CONCAT */
+- OR 조건을 UNION ALL set operator를 사용하는 compound query로 변환
+- combined OR conditions -> a compound query using the UNION ALL set operator 로 
+ transformation 한다.
+- 일반적으로, 이 transformation은 다음과 같은 상황에서 발생 if concatenations을 사용하는 
+ query의 cost가 그렇지 않는 cost보다 더 작을 때.
+- inlists processing과 OR-expands all disjunctions를 turns off한다.
+
+ 
+
++ ORDERED
+- /*+ ORDERED */
+- FROM절에 table이 나타나는 순서대로 테이블을 join시킨다.
+
+ 
+
++ STAR
+- /*+ STAR */
+
+ 
+
++ USE_NL
+- /*+ USE_NL(table1 table2 ...) */
+- 테이블을 적는 부분에 테이블 기술된 table은 inner table로서 사용하여 nested loops로서 
+ 다른 테이블의 row source와 기술된 table을 join하게 한다. 
+- 지정된 table이 inner table이 된다. ( inner table <-> driving(outer) table )
+- 흔히 ORDERED Hint와 함께 쓴다.
+
+
+cf) Tuning reference guide 에 의하면 use_nl과 use_merge 는 모두 ordered hint 와 함께 
+ 사용되어져야 하며, 오라클은 이 hint 가 inner table 인 경우 사용되어진다고
+언급하고 있습니다.
+
+
++ USE_MERGE
+- /*+ USE_MERGE(table1 table2 ...) */
+- 오라클이 sort-merge join으로 각 테이블을 조인하게끔 하는 방법이다. 
+
+ 
+
++ USE_HASH
+- /*+ USE_HASH(table1 table2 ...) */
+
+ 
+
++ DRIVING_SITE
+- query execution이 행해진다.
+- rule/cost-based 모두 가능.
+
+ 
+
++ CACHE
+- /*+ CACHE(table) */
+- full table scan이 수행됐을 때 hint에 있는 테이블에 대해 retrieve된 블록들은 버퍼 
+ 캐시에 있는 LRU list의 가장최근(most recently)에 사용되어진 것의 끝에 위치.
+- full table scan시 retrieve된 block을 LRU list에서 most recently used end에 놓는다. 
+ 즉, memory에 오래 존재하게 한다.
+
+ 
+
++ NOCACHE
+- /*+ NOCACHE(table) */
+- full table scan이 수행됐을 때 hint에 있는 테이블에 대해 retrieve된 블록들은 버퍼 
+ 캐시에 있는 LRU list의 가장 오래전(least recently)에 사용되어진 것의 끝에 위치
+- full table scan시 retrieve된 block을 LRU list에서 least recently used end에 놓는다. 
+ 즉, memory에서 금방 내려가게 한다.
+
+ 
+
++ MERGE
+- /*+ MERGE(view) */
+- COMPLEX_VIEW_MERGING = FALSE 로 되어 있을 때
+- view 또는 subquery의 내용을 merge가능.
+
+ 
+
++ NOMERGE
+- /*+ NOMERGE(view) */
+- COMPLEX_VIEW_MERGING = TRUE 로 되어 있을 때 사용
+- view 또는 subquery의 내용을 merge불가능.
+- view 또는 subquery자체의 query문에 의한 영향을 많이 받게됨.
+
+ 
+
++ PUSH_JOIN_PRED
+
+ 
+
++ NO_PUSH_JOIN_PRED
+
+ 
+
++ PUSH_SUBQ
+- /*+ PUSH_SUBQ */
+- nomerged subqueries가 execution plan에서 가능한 가장 빠른 위치에서 evaluation되도록 한다.
+- 일반적으로, merge되지 않은 subqueries는 execution plan에서 마지막 step으로써 수행된다. 
+ subqueries가 상대적으로 inexpensive하고 rows의 수를 줄일 수 있다면, subqueries를 
+ 더 일찍 evaluation하는 것이 performance를 향상시킬 것이다.
+- subquery가 remote table에 적용되거나, merge join을 사용하는 join된 table에 적용된다면 
+ 이 hint는 적용되지 않는다.
+
+ 
+
++ STAR_TRANSFORMATION
+- /*+ START TRANSFORMATION */
+

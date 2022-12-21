@@ -1,0 +1,31 @@
+[컴파일]
+
+1. 개발디렉토리로 로그인
+    - tcc ke100001r     (AP 프로그램명)
+    - vi   sp_ke001.pc (서비스 프로그램에 AP프로그램 등록)
+    - tcc sp_ke001
+
+2. 실행디렉토리로 로그인
+    - vi ap_ke001.mk  (make 파일수정)
+    - tcomke
+
+3. 디버깅
+    - tail -f 로그파일명 : 디버깅시에 로그보기
+    - ctrl + c : tail 에서 빠져나가기
+
+4. 주의사항
+    - core가 생기면 삭제
+    - 컴파일후 반영이 않되면 오브젝트파일 삭제후 반복
+
+
+[tcomke에러]
+
+- ERROR: can't attach to BB 
+- Text file busy : tcomke 실행시 서비스를 cannot write될때
+- ps -ef|grep ap_ke001 : 서비스 프로세스 보기
+   - ps : 실행중인 프로세스에 관한 정보를 출력
+   - e : 모든 프로세스 정보를 출력
+   - f : 프로세스의 모든 정보를 출력
+   - grep : 파일의 패턴을 검색하는 명령어
+- kill -9 17703 : 177703번 죽이기
+- cat tcomke : tcomke의 내용보기
