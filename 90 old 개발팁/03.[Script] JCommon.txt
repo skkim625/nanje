@@ -1,0 +1,2081 @@
+/**
+===============================================================================
+주  시 스 템 : 공통 개발
+서브  시스템 : 없음
+프로그램  ID : JCommon.js
+프로그램  명 : 공통 기능 Javascript
+프로그램개요 : 공통적으로 사용되는 Javascript를 정의한다
+작   성   일 : 2001.12.12
+===============================================================================
+수정자/수정일 : 공통팀/2002.05.07
+수정사유/내역 : 그리드사용/path_nm 추가
+===============================================================================
+수정자/수정일 : 공통팀/2002.05.08
+수정사유/내역 : 달력 및 팝업 에러/기존 "../../../../js" 표기를 "/js"로 변경
+===============================================================================
+*/
+
+/**
+ * 현재 페이지의 pathname중 파일명을 제외한 부분. 그리드함수에서 편리하게 사용하기 위함
+ * 예) location.pathname="/biz/fd/fds/jsp/myjx.jsp"일 경우 path_nm=""/biz/fd/fds/jsp/"임
+ *     (기존)ucGrid.GetMode("/biz/fd/fds/jsp/myjx.jsp", "");
+ *     (변경)ucGrid.GetMode(path_nm + "myjx.jsp", "");
+ */
+var path_nm = location.pathname;
+path_nm = path_nm.substr(0,path_nm.lastIndexOf("/")+1);
+
+function na_open_window(name, url, left, top, width, height, toolbar, menubar, statusbar, scrollbar, resizable)
+{
+  toolbar_str = toolbar ? 'yes' : 'no';
+  menubar_str = menubar ? 'yes' : 'no';
+  statusbar_str = statusbar ? 'yes' : 'no';
+  scrollbar_str = scrollbar ? 'yes' : 'no';
+  resizable_str = resizable ? 'yes' : 'no';
+  window.open(url, name, 'left='+left+',top='+top+',width='+width+',height='+height+',toolbar='+toolbar_str+',menubar='+menubar_str+',status='+statusbar_str+',scrollbars='+scrollbar_str+',resizable='+resizable_str);
+}
+
+/**
+ * 입력값이 숫자인지를 확인한다
+ * param : sVal 입력스트링
+ * return : Boolean True이면 숫자값
+ */
+function isNumber(sVal)
+{
+  if(sVal.length < 1)
+  {
+    return false;
+  }
+
+  for(i=0; i<sVal.length; i++)
+  {
+    iBit = parseInt(sVal.substring(i,i+1));     //문자(Char)를 숫자로 변경
+    if(('0' < iBit) || ('9' > iBit)) 
+    {
+      //alert(i+':'+iBit+':'+'Mun');
+    }
+    else 
+    {
+      //alert((i+1)+'번째 문자는 숫자가 아닙니다.');
+      return false;
+    }
+  }
+  return true;
+}
+
+/**
+ * sVal 값이 숫자인지를 확인한다.(' '까지 괜찮음)
+ * param : sVal 입력스트링
+ * return : Boolean  True이면 숫자값
+ */
+function isNumberSpace(sVal)
+{
+  if(sVal.length > 0)
+  {
+    for(var i=0;i<sVal.length;i++)
+    {
+      sBitData = sVal.substring(i,i+1);     //문자열의 문자(char)를 넣는다
+      if(sBitData == ' ')
+      {
+      }
+      else
+      {
+        iBit = parseInt(sVal.substring(i,i+1)); //문자(char)를 숫자로
+        if(('0' < iBit) || ('9' > iBit) || (' ' == sBitData))
+        {
+        }
+        else 
+        {
+          return false;
+        }
+      }
+    }
+  }
+  return true;
+}
+
+ 
+
+/**
+ * sVal 값이 숫자인지를 확인한다.('.'까지 괜찮음), 마이너스 값도 허용
+ * param : sVal 입력스트링
+ * return : Boolean  True이면 숫자값
+ */
+function isNumberDot(sVal)
+{    
+ 
+  var result;
+
+  if(sVal.length < 1)
+  {
+    return false;
+  }
+
+  for(var i=0;i<sVal.length;i++) 
+  {
+    sBitData = sVal.substring(i,i+1);       //문자열의 문자(char)를 넣는다
+
+ if( i == 0 ) {
+  if( sBitData == '-' ) { // 마이너스값 허용
+  } else {
+   if( sBitData >= '0' && sBitData <= '9' ) {
+
+   } else {
+    return false;
+   }
+  }
+
+ } else {
+
+  if(sBitData == '.'){ 
+  } else {
+    iBit = parseInt(sVal.substring(i,i+1));   //문자(Char)를 숫자로
+
+    if(('0' < iBit) || ('9' > iBit) || ('.' == sBitData)){ 
+    } else {
+   return false;
+    }
+  } //end of if-else
+ 
+ }//추가
+
+  } //end of for
+
+  return true;
+}
+
+
+/**
+ * 첫번째 Zero 값을 자른다.
+ * param : sVal 입력스트링
+ * return : String  Zero값을 자른 값
+ */
+function trimZero(sVal)
+{
+  if(sVal.charAt(0) == '0')
+  {
+    return sVal.substring(1,sVal.length);
+  }
+  else
+  {
+    return sVal;
+  }
+}
+
+/**
+ * 길이가1인 경우 앞에 "0"을 붙인다.
+ * param : sVal 입력스트링
+ * return : String  "0"값을 포함하는 값
+ */
+function addZero(sVal)
+{
+  var iLen = sVal.length;   //인수값의 길이를 구한다.
+  if(iLen == 1)
+  {
+    sVal = "0"+sVal;
+  }
+  else if(iLen == 0)
+  {
+    return;
+  }
+  return sVal;
+}
+
+/**
+ * 날짜 여부를 확인한다.(월일 or 년월 or 년월일)
+ * param : sYmd 입력스트링(MMDD or YYYYMM or YYYYMMDD)
+ * return : Boolean true이면 날짜 범위임
+ */
+function isDate(sYmd)
+{
+  var bResult;  // 결과값을 담는 변수(Boolean)
+  switch (sYmd.length)
+  {
+    case 4://월일
+      bResult = isDateMD(sYmd);
+      break;
+    case 6://년월
+      bResult =  isDateYM(sYmd); 
+      break;
+    case 8://년월일
+      bResult =  isDateYMD(sYmd);
+      break;
+    default:
+      bResult = false;  // 날짜 값이 아님
+      break;
+  }
+  return bResult;
+}
+
+/**
+ * 날짜 여부를 확인한다.(년월일)
+ * param : sYmd 입력스트링(YYYYMMDD)
+ * return : Boolean true이면 날짜 범위임
+ */
+function isDateYMD(sYmd)
+{
+  // 숫자 확인
+  if(!isNumber(sYmd))
+  {
+    alert('날짜는 숫자만 입력하십시오');
+    return false;
+  }
+
+  // 길이 확인
+  if(sYmd.length != 8)
+  {
+    alert('일자를 모두 입력하십시오');
+    return false;
+  }
+  var iYear = parseInt(sYmd.substring(0,4));  // 년도 입력(YYYY)
+  var iMonth = parseInt(trimZero(sYmd.substring(4,6)));   //월입력(MM)
+  var iDay = parseInt(trimZero(sYmd.substring(6,8)));     //일자입력(DD)
+
+  if((iMonth < 1) ||(iMonth >12))
+  {
+    alert(iMonth+'월의 입력이 잘못 되었습니다.');
+ return false;
+  }
+ 
+  //각 달의 총 날수를 구한다
+  var iLastDay = lastDay(sYmd.substring(0,6));  // 해당월의 마지말날 계산
+
+  if((iDay < 1) || (iDay > iLastDay))
+  {
+    alert(iMonth+'월의 일자는 1 - '+ iLastDay +'까지입니다.');
+    return false;
+  }
+  return true;
+}
+
+
+/**
+ * 날짜 여부를 확인한다.(월일)
+ * param : sMD 입력스트링(MMDD)
+ * return : Boolean true이면 날짜 범위임
+ */
+function isDateMD(sMD)
+{
+  // 숫자 확인
+  if(!isNumber(sMD))
+  {
+    alert('숫자만 입력하십시오');
+    return false;
+  }
+
+  // 길이 확인
+  if(sMD.length != 4)
+  {
+    alert('일자를 모두 입력하십시오');
+    return false;
+  }
+
+  var iMonth = parseInt(trimZero(sMD.substring(0,2)));  //해당월을 숫자값으로
+  var iDay = parseInt(trimZero(sMD.substring(2,4)));    //해당일을 숫자값으로
+
+  if((iMonth < 1) ||(iMonth >12))
+  {
+    alert(iMonth+'월의 입력이 잘못 되었습니다.');
+    return false;
+  }
+ 
+  //각 달의 총 날수를 구한다
+  if (iMonth < 8 )
+   {
+ var iLastDay = 30 + (iMonth%2);
+   }
+  else
+   {
+ var iLastDay = 31 - (iMonth%2);
+   }
+
+  if (iMonth == 2)
+  {
+    iLastDay = 29;
+  }
+ 
+  if((iDay < 1) || (iDay > iLastDay))
+  {
+    alert(iMonth+'월의 일자는 1 - '+iLastDay+'까지입니다.');
+    return false;
+  }
+  return true;  
+}
+
+
+/**
+ * 날짜 여부를 확인한다.(년월)
+ * param : sYM 입력스트링(YYYYMM)
+ * return : Boolean true이면 날짜 범위임
+ */
+function isDateYM(sYM)
+{
+  // 숫자 확인
+  if(!isNumber(sYM))
+  {
+    alert('날짜는 숫자만 입력하십시오');
+    return false;
+  }
+
+  // 길이 확인
+  if(sYM.length != 6)
+  {
+    alert('일자를 모두 입력하십시오');
+    return false;
+  }
+ 
+  var iYear = parseInt(sYM.substring(0,4)); //년도값을 숫자로
+  var iMonth = parseInt(trimZero(sYM.substring(4,6)));  //월을 숫자로
+ 
+  if((iMonth < 1) ||(iMonth >12))
+  {
+    alert(iMonth+'월의 입력이 잘못 되었습니다.');
+    return false;
+  }
+  return true;  
+}
+
+/**
+ * 년월을 입력받아 마지막 일를 반환한다(년월)
+ * param : sYM 입력스트링(YYYYMM)
+ * return : String 해당월의 마지막날
+ */
+function lastDay(sYM)
+{
+  if(sYM.length != 6)
+  {
+    alert("정확한 년월을 입력하십시요.");
+    return;
+  }
+  
+  if(!isDateYM(sYM))
+  {
+     return;
+  }
+ 
+  daysArray = new makeArray(12);    // 배열을 생성한다.
+
+  for (i=1; i<8; i++)
+  {
+    daysArray[i] = 30 + (i%2);
+  }
+  for (i=8; i<13; i++)
+  {
+    daysArray[i] = 31 - (i%2);
+  }  
+  var sYear = sYM.substring(0, 4) * 1;
+  var sMonth = sYM.substring(4, 6) * 1;
+ 
+  if (((sYear % 4 == 0) && (sYear % 100 != 0)) || (sYear % 400 == 0))
+  {
+  daysArray[2] = 29;
+  }
+  else
+  {
+  daysArray[2] = 28;
+  }
+ 
+  return daysArray[sMonth].toString(); 
+}
+
+
+/**
+ * 시간 값을 확인한다.
+ * param : sHm 입력스트링(HHMM)
+ * return : Boolean true이면 시간 범위내
+ */
+function isTime(sHm)
+{
+  
+  // 숫자 확인
+  if(!isNumber(sHm))
+  {
+    alert('숫자만 입력하십시오');
+    return false;
+  }
+ 
+  // 길이 확인
+  if(sHm.length != 4)
+  {
+    alert('4자리를 모두 입력하십시오(HHMM)');
+    return false;
+  }
+ 
+  var iHH = parseInt(trimZero(sHm.substring(0,2))); //시간을 숫자로
+  var iMM = parseInt(trimZero(sHm.substring(2,4))); //분을 숫자로
+ 
+  if((iHH < 0) ||(iHH >23))
+  {
+    alert('시간 입력이 잘못 되었습니다.');
+    return false;
+  }
+ 
+  if((iMM < 0) ||(iMM >59))
+  {
+    alert('분 입력이 잘못 되었습니다.');
+    return false;
+  }
+  return true;  
+}
+
+
+/**
+ * 대소문자를 포함한 영문자인지 확인한다.
+ * param : sVal 입력문자열
+ * return : Boolean true이면 알파벳
+ */
+function isAlpha(sVal)
+{
+  // Alphabet 값
+  var sAlphabet="abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+  var iLen=sVal.length;   //입력값의 길이
+
+  for(i=0;i<iLen;i++)
+  {
+    if(sAlphabet.indexOf(sVal.substring(i,i+1))<0)
+    {
+      alert("허용된 문자가 아닙니다.\n영문으로 입력해 주십시오");    
+      return false;
+    }
+  }
+  return true;  
+}
+
+/**
+ * 영문자와 숫자 구성된 문자열인지 확인
+ * param : sVal 입력문자열
+ * return : Boolean true이면 영문자,숫자로 구성된 문자열
+ */
+function isAlphaNumeric(sVal)
+{
+  var sAlphabet = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890";
+  var iLen      = sVal.length;
+
+  for ( i = 0; i < iLen; i++ )
+  {
+    if ( sAlphabet.indexOf(sVal.substring(i, i+1)) < 0 )
+    {
+      return false;
+    }   // end of if
+  } // end of for
+  return true;  
+}   // end of isAlphaNumeric
+
+/**
+ * 문자열의 길이를 return (한글:2자)
+ * param : sVal 입력문자열
+ * return : int 입력문자열의 길이
+ */
+function strLength(sVal)
+{ 
+  var sBit = '';    // 문자열의 문자(Char)
+  var iLen = 0; //문자열 길이
+
+  for ( i = 0 ; i < sVal.length ; i++ )
+  {
+    sBit = sVal.charAt(i);
+    if ( escape( sBit ).length > 4 )
+    {
+      iLen = iLen + 2;
+    }
+ else
+ {
+      iLen = iLen + 1;
+    }
+  }
+  return iLen;
+}
+
+
+/**
+ * 한글이지 여부 체크
+ * param : sVal 입력문자열
+ * return : Boolean true이면 한글
+ */
+function isHangul(sVal)
+{
+  var sBit = '';
+  var iLen = 0;
+  for(i=0;i<sVal.length;i++)
+  {
+    sBit = sVal.charAt(i);
+    if(escape( sBit ).length <= 4)
+    {
+      return false;
+    }
+  }
+  return true;
+}
+
+/**
+ * 주민등록 여부를 확인한다.
+ * param : sID 입력문자열(주민번호 13자리)
+ * return : Boolean true이면 적합한 주민번호
+ */
+function isIdentifyNo(sID)
+{
+  cBit = 0;
+  sCode="234567892345";
+
+  for(i=0;i<12;i++)
+  {
+    cBit = cBit+parseInt(sID.substring(i,i+1))*parseInt(sCode.substring(i,i+1));
+  }
+    
+  cBit=11-(cBit%11);
+  cBit=cBit%10;
+   
+  if(parseInt(sID.substring(12,13))==cBit) 
+  {
+    return true;
+  }
+  else
+  {
+    return false;
+  }
+}
+
+
+/**
+ * 입력받은 날짜로부터 몇일 후의 날짜를 반환하기
+ * param : ObjDate객체, 일수, 결과Data객체
+ * return : 
+ */
+function calcDate(objDate,iDay,objResultDate)
+{
+  daysArray = new makeArray(12); //월별 공간을 생성
+ 
+  for(i=1; i<13; i++) 
+  {
+    daysArray[i] = 30 + (i%2);
+  }
+  
+  var sYear   = objDate.value.substring(0, 4) * 1;
+  var sMonth  = objDate.value.substring(4, 6) * 1;
+  var sDay    = objDate.value.substring(6, 8) * 1;
+ 
+  daysArray[2] = lastDay(sYear + "02");
+ 
+  var iMoveRemain = iDay * 1 + sDay;
+  var iCurMonth   = sMonth;
+  var iCurYear    = sYear;
+ 
+  while (iMoveRemain > daysArray[iCurMonth])
+  {
+    iMoveRemain = iMoveRemain - daysArray[iCurMonth];
+  
+    iCurMonth = iCurMonth + 1;
+    if (iCurMonth > 12)
+    {
+      iCurMonth = 1;
+      iCurYear = iCurYear + 1;   
+      daysArray[2] = lastDay(iCurYear + "02");
+    }
+  } //end of while
+ 
+  iCurMonth = addZero(iCurMonth.toString());
+  iMoveRemain = addZero(iMoveRemain.toString());
+ 
+  objResultDate.value = iCurYear + iCurMonth + iMoveRemain;
+}
+
+/**
+ * 숫자 0으로 초기화 된 1차원 배열을 생성한다.
+ * param : iSize 배열 크기
+ * return : this 배열
+ */
+function makeArray(iSize)
+{
+  this.length = iSize;
+
+  for (i = 1; i <= iSize; i++)
+  {
+    this[i] = 0;
+  }
+  return this;
+}
+
+
+/**
+ * 사업자 번호가 정확한지 확인한다.
+ * param : iSaupNo 사업자번호
+ * return : Boolean true이면 검증된 사업자번호
+ */
+function isSaupNO(iSaupNo)
+{
+  if (!isNumber(iSaupNo))
+  {
+    alert("사업자 번호는 반드시 숫자로 구성되어야 합니다.");
+    return false;
+  } 
+  else if (iSaupNo.length != 10)
+  {
+    alert("사업자 번호는 10자리 입니다.");
+    return false;
+  }
+
+  var arr_saup = iSaupNo.split("");
+  var wtArray = new Array(1,3,7,1,3,7,1,3,5);
+  var iSaup_9 = 0;
+  var iSum_saup = 0;
+  var iCheck_digit = 0;
+
+  //1~8자리까지 가중치를 곱하여 모두 더한다.
+  for (i = 0; i < 8; i++)
+  {
+      iSum_saup +=  eval(arr_saup[i]) * eval(wtArray[i]);
+  }
+
+  iSum_saup = iSum_saup % 10;
+  //9번째 자리 숫자에 5를 곱한다.
+  iSaup_9 = eval(arr_saup[8]) * 5
+
+  //5를 곱한 값을 10으로 나누어  몫과 나머지를 각각 1~8합계에 더한다.
+  iSum_saup +=  Math.floor(iSaup_9 / 10) + iSaup_9 % 10;
+
+  //결과 값을 10에서 뺀다.
+  iCheck_digit = 10 - (iSum_saup % 10);
+
+  //계산 값을 10으로 나눈 나머지를 구한다. (Check Digit)
+  iCheck_digit = iCheck_digit % 10;
+
+  if (iCheck_digit != arr_saup[9])
+  {
+    alert("사업자 번호가 정확하지 않습니다.\n 다시 확인하신후 입력하십시오.");
+    return false;
+  }
+  return true;
+}
+
+
+/**
+ * 법인 번호가 정확한지 확인한다.
+ * param : sRegNo 법인번호
+ * return : Boolean true이면 검증된 법인번호
+ */
+function isRegNo(sRegNo)
+{
+  if (!isNumber(sRegNo))
+  {
+    alert("법인 번호는 반드시 숫자로 구성되어야 합니다.");
+    return false;
+  }
+  else if (sRegNo.length != 13)
+  {
+    alert("법인 번호는 13자리 입니다.");
+    return false;
+  }
+
+  var arr_regno = sRegNo.split("");
+  var arr_wt = new Array(1,2,1,2,1,2,1,2,1,2,1,2);
+  var iSum_regno = 0;
+  var iCheck_digit = 0;
+
+  //1~12자리까지 가중치를 곱하여 모두 더한다.
+  for (i = 0; i < 12; i++)
+  {
+      iSum_regno +=  eval(arr_regno[i]) * eval(arr_wt[i]);
+  }
+
+  //합계를 10으로 나눈 나머지를 10에서 뺀다.
+  iCheck_digit = 10 - (iSum_regno % 10);
+
+  //계산 값을 10으로 나눈 나머지를 구한다. (Check Digit)
+  iCheck_digit = iCheck_digit % 10;
+
+  if (iCheck_digit != arr_regno[12])
+  {
+      alert("법인 번호가 정확하지 않습니다.\n 다시 확인하신후 입력하십시오.");
+      return false;
+  }
+
+  return true;
+}
+
+/**
+ * 숫자 분리자(,)(.)가 있는 숫자이거나 일반숫자형태인지 검사한다.
+ * param : sVal
+ * return : Boolean 
+ */
+function isMoneyNumber(sVal)
+{    
+  var iAbit;
+ 
+  if (sVal.length < 1) return true;
+  for (i=0; i<sVal.length; i++)
+  {
+    iAbit = parseInt(sVal.substring(i,i+1));
+    if (!(('0' < iAbit) || ('9' > iAbit)))
+    {
+      if (sVal.substring(i, i+1) == ',' || sVal.substring(i, i+1) == '.' )
+      {
+      }
+      else
+      {
+        return false;
+      }
+    }
+  }
+  return true;
+}
+
+
+/**
+ * 콤마 숫자 표현. 중간의 숫자 이외의 표현은 제거함.
+ * param : val
+ * return : String
+ */
+function getMoneyType(val)
+{
+  if (typeof val == "number")
+  {
+    val = val.toString();
+  }
+ 
+  var value = getOnlyNumberDot(val);
+ 
+  var sResult = "";
+
+  if (value.length == 0)
+  {
+    alert("숫자만을 입력하세요.");
+    return;
+  }
+
+  if (! isMoneyNumber(value))
+  {
+    alert("숫자만을 입력하세요.");
+    return;
+  }
+ 
+  var nI;
+  var nJ = -1;
+  var subOne;
+  var flag = false;
+
+  for (nI = value.length - 1; nI >= 0; nI--)
+  {
+    subOne = value.substring(nI, nI + 1);
+    sResult = subOne + sResult;
+
+
+ if (subOne == '.')
+ {
+  flag = true;
+ }
+
+ if (flag == true)
+ {
+  nJ = nJ + 1;
+ }
+
+    if ((nJ % 3 == 0) && (nI != 0) && (nJ != 0))
+    {
+      sResult = "," + sResult;
+    }
+  }
+  return sResult;
+}
+
+/**
+ * 부호가 있는 콤마 숫자 표현. 중간의 숫자 이외의 표현은 제거함
+ * param : val
+ * return : String
+ */
+function getSignMoneyType(val)
+{
+  if (typeof val == "number")
+  {
+  val = val.toString();
+  }
+
+  var s1  = val.substring(0,1);
+  var slen = val.length;
+  var sign = "";
+  var ret  = "";
+  if (val == "-Infinity")
+  {
+  return "0";
+  }
+ 
+  if(slen>1 )
+  {
+    if(s1 == "-")
+    {
+      sign = "-";
+      ret = sign + getMoneyType(val.substring(1,slen));
+     }
+     else
+     {
+       ret = getMoneyType(val);
+     }
+   }
+   else
+   {
+     ret = val;
+   } 
+   return  ret; 
+}
+
+/**
+ * 콤마를 제거한 숫자형태 문자열로 반환
+ * param : val
+ * return : String
+ */
+function getOnlyNumber(val)
+{    
+  var value = "";
+  var abit;
+
+  if (typeof val != "number" && typeof val !="string") 
+  {
+    return "0";
+  }
+  if (val.length < 1 || val == "NaN" || val == "-Infinity")
+  {
+    return "0";
+  }
+    
+  for (i=0;i<val.length;i++)
+  {
+    abit = parseInt(val.charAt(i));
+    if (0 <= abit && 9 >= abit )
+      value += abit;
+
+  }
+  return value;
+}
+
+function getOnlyNumberDot(val)
+{    
+  var value = "";
+  var abit;
+
+  if (typeof val != "number" && typeof val !="string") 
+  {
+    return "0";
+  }
+  if (val.length < 1 || val == "NaN" || val == "-Infinity")
+  {
+    return "0";
+  }
+    
+  for (i=0;i<val.length;i++)
+  {
+   abit = val.charAt(i);
+    switch (abit){
+    case '.' :
+      value += abit;  
+      break;
+    default :
+      if (0 <= parseInt(abit) && 9 >= parseInt(abit))
+        value += abit;
+    }
+
+  }
+  return value;
+}
+
+/**
+ * 콤마를 제거한 부호가 있는 숫자형태 문자열로 반환
+ * param : val
+ * return : String
+ */
+function getOnlySignNumber(val)
+{
+  if (val == "-") return 0;
+  var price = eval(getOnlyNumber(val));
+  if (val.substring(0,1) == "-") 
+  {
+    price *= -1;
+  }
+  return price;
+}
+
+/**
+ * 콤마를 제거한 부호가 있는 숫자형태 문자열로 반환
+ * param : val
+ * return : String
+ */
+
+function getOnlyNumberAll(val)
+{
+  
+  var value = "";
+  var abit;
+  var me=val;
+  
+  meValue = me.value;
+  
+ 
+  for (i=0;i<meValue.length;i++)
+  {
+   abit = meValue.charAt(i);
+    switch (abit){
+    case '.' :
+      value += abit;  
+      break;
+     case '-' :
+      value += abit;  
+      break;  
+    default :
+      if (0 <= parseInt(abit) && 9 >= parseInt(abit))
+        value += abit;
+    }
+
+  }
+  //alert(value);
+  //me.value = value;
+  return value;
+}
+
+
+/**
+ * 조회조건 시작일과 종료일 입력 유효성 확인 - 컨드롤 이용
+ * param : objFrom, objTo
+ * return : String
+ */
+function chkPeriod(objFrom, objTo) 
+{
+  if (!isDate(objFrom.value))
+  {
+    objFrom.focus();
+    return false;
+  }
+  else if (!isDate(objTo.value))
+  {
+    objTo.focus();
+    return false;
+  }
+  else if (objFrom.value > objTo.value)
+  {
+    alert("마지막일이 시작일보다 작습니다");
+    objFrom.focus();
+    return false;
+  }
+  return true;
+}
+
+/**
+ * 앞뒤 공백을 제거한다.
+ * param : sVal
+ * return : String
+ */
+function Trim(sVal)
+{
+  return(LTrim(RTrim(sVal)));
+}
+
+/**
+ * 앞 공백을 제거한다.
+ * param : sVal
+ * return : String
+ */
+function LTrim(sVal)
+{
+  var i;
+  i = 0;
+  while (sVal.substring(i,i+1) == ' ')
+  {
+    i++;
+  }
+  return sVal.substring(i);
+}
+
+ 
+
+/**
+ * 뒤 공백을 제거한다.
+ * param : sVal
+ * return : String
+ */
+function RTrim(sVal)
+{
+  var i = sVal.length - 1;
+  while (i >= 0 && sVal.substring(i,i+1) == ' ') 
+  {
+    i--;
+  }
+  return sVal.substring(0,i+1);
+}
+
+/**
+ * 공백만 존재하거나 아무것도 없는지 확인한다.
+ * param : sVal
+ * return : boolean 공백이나 Empty이다
+ */
+function isEmpty(sVal){
+  if (Trim(sVal) == '')
+  {
+    return true;
+  }
+  return false;
+}
+
+/**
+ * 현재 컨트롤과 MaxLength 받아서 MaxLength 되면 다음 컨트롤로 이동
+ * param : objCurrent, objNext
+ */
+function focusMove(objCurrent, objNext)
+{
+  if ( objCurrent.getAttribute("Maxlength") == objCurrent.value.length)
+  {
+    objNext.focus();
+  }
+}
+
+/**
+ * 현재 컨트롤과 MaxLength 받아서 MaxLength 되면 다음 컨트롤로 이동(선택)
+ * param : objCurrent, objNext
+ */
+function focusMoveSelect(objCurrent, objNext)
+{
+  if ( objCurrent.getAttribute("Maxlength") == objCurrent.value.length)
+  {
+    objNext.focus();
+    objNext.select();
+  }
+}
+
+/**
+ * 현재 컨트롤과 MaxLength 받아서 MaxLength 되거나 Enter키를 눌었을때  다음 컨트롤로 이동
+ * param : objCurrent, objNext
+ */
+function focusMoveEnter(objCurrent, objNext)
+{
+  if ( objCurrent.getAttribute("Maxlength") == objCurrent.value.length || event.keyCode==13)
+  {
+    objNext.focus();
+  }
+}
+
+/**
+ * 현재 컨트롤과 MaxLength 받아서 MaxLength  되거나 Enter키를 눌었을때 다음 컨트롤로 이동(선택)
+ * param : objCurrent, objNext
+ */
+function focusMoveEnterSelect(objCurrent, objNext)
+{
+  if ( objCurrent.getAttribute("Maxlength") == objCurrent.value.length || event.keyCode==13)
+  {
+    objNext.focus();
+    objNext.select();
+  }
+}
+
+/**
+ * 조회년월의 validation을 check한다(argument:control)
+ * param : objFromY,objFormM,objToY,objToM,msg
+ * return : boolean
+ */
+function checkPeriodYM(objFromY,objFromM,objToY,objToM,msg)
+{
+  if (typeof msg != "string")
+  {
+    msg = "조회";
+  }
+
+  var fYYYY = Trim(objFromY.value);
+  var fMM   = Trim(objFromM.value);
+  var tYYYY = Trim(objToY.value);
+  var tMM   = Trim(objToM.value);
+
+  if(fYYYY.length<1||fYYYY.length!=4)
+  {
+    alert(msg + " 시작년은 4자리입니다!");
+    objFromY.focus();
+    return false;
+  }
+  if(fMM.length<1||fMM.length!=2)
+  {
+    alert(msg + " 시작월은 2자리입니다!");
+    objFromM.focus();
+    return false;
+  }
+  if(tYYYY.length<1||tYYYY.length!=4)
+  {
+    alert(msg + " 종료년은 4자리입니다!");
+    objToY.focus();
+    return false;
+  }
+  if(tMM.length<1||tMM.length!=2)
+  {
+    alert(msg + " 종료월은 2자리입니다!");
+    objToM.focus();
+    return false;
+  }
+  if(!isNumber(fYYYY))
+  {
+    alert("년도는 숫자만 입력하십시요!");
+    objFromY.focus();
+    return false;
+  }
+  if(!isNumber(fMM))
+  {
+    alert("월은 숫자만 입력하십시요!");
+    objFromM.focus();
+    return false;
+  }
+  if(!isNumber(tYYYY))
+  {
+    alert("년도는 숫자만 입력하십시요!");
+    objToY.focus();
+    return false;
+  }
+  if(!isNumber(tMM))
+  {
+    alert("월은 숫자만 입력하십시요!");
+    objToM.focus();
+    return false;
+  }
+  if(fYYYY>tYYYY)
+  {
+    alert("시작년이 종료년보다 큽니다!");
+    objFromY.focus();
+    return false;
+  }
+  if((fYYYY==tYYYY)&&(fMM>tMM))
+  {
+    alert("시작월이 종료월보다 큽니다!");
+    objFromM.focus();
+    return false;
+  }
+  if((fMM == '00') ||(fMM >12))
+  {
+    alert(fMM+'월의 입력이 잘못 되었습니다!');
+    objFromM.focus();
+    return false;
+  }
+  if(( tMM== '00') ||(tMM >12))
+  {
+    alert(tMM+'월의 입력이 잘못 되었습니다!');
+    objToM.focus();
+    return false;
+  }
+  return true; 
+}
+
+/**
+ * 조회년월 validation checking (argument:control).
+ * param : objFromY,objFormM,objToY,objToM,msg
+ * return : 
+ */
+function checkYM(objYear,objMonth)
+{
+  var sYear  = Trim(objYear.value);
+  var sMonth = Trim(objMonth.value);
+
+  if(sYear.length<1||sYear.length!=4)
+  {
+    alert("조회년은 4자리입니다!");
+    objYear.focus();
+    return false;
+  }
+  if(sMonth.length<1||sMonth.length!=2)
+  {
+    alert("조회월은 2자리입니다!");
+    objMonth.focus();
+    return false;
+  }
+
+  if(!isNumber(sYear))
+  {
+    alert("년도는 숫자만 입력하십시요!");
+    objYear.focus();
+    return false;
+  }
+  if(!isNumber(sMonth))
+  {
+    alert("월은 숫자만 입력하십시요!");
+    objMonth.focus();
+    return false;
+  }
+ 
+  if((sMonth == '00') ||(sMonth >12))
+  {
+    alert(sMonth+'월의 입력이 잘못 되었습니다!');
+    objMonth.focus();
+    return false;
+  }
+  return true; 
+}
+
+/**
+ * 조회년월 validation checking (argument:control).
+ * param : objFromY,objFormM,objFromD,objToY,objToM,objToD,msg
+ * return : boolean
+ */
+function checkYMD(objFromY,objFromM,objFromD,objToY,objToM,objToD,msg)
+{
+  if (typeof msg != "string")
+  {
+    msg = "조회";
+  }
+
+  if(!checkPeriodYM(objFromY,objFromM,objToY,objToM,msg))
+  {
+    return false; 
+  } 
+
+  var fDD = Trim(objFromD.value);
+  var tDD = Trim(objToD.value);
+
+  if(fDD.length<1||fDD.length!=2)
+  {
+    alert(msg + " 시작일은 2자리입니다!");
+    objFromD.focus();
+    return false;
+  }
+  if(tDD.length<1||tDD.length!=2)
+  {
+    alert(msg + " 종료일은 2자리입니다!");
+    objToD.focus();
+    return false;
+  }
+  if(!isNumber(fDD))
+  {
+    alert("날짜는 숫자만 입력하십시요!");
+    objFromD.focus();
+    return false;
+  }
+  if(!isNumber(tDD)) 
+  {
+    alert("날짜는 숫자만 입력하십시요!");
+    objToD.focus();
+    return false;
+  }
+
+  var fDays = lastDay(objFromY.value + "" + objFromM.value);
+  var tDays = lastDay(objToY.value + "" + objToM.value);
+ 
+  if(fDD> fDays) 
+  {
+    alert("시작일의 입력이 잘못되었습니다!");
+    objFromD.focus();
+    return false;
+  } 
+  if(tDD> tDays) 
+  {
+    alert("종료일의 입력이 잘못되었습니다!");
+    objToD.focus();
+    return false;
+  } 
+  if((objFromY.value==objToY.value)&&(objFromM.value==objToM.value)&&(fDD>tDD)) 
+  {
+    alert("시작일이 종료일보다 큽니다!");
+    objFromD.focus();
+    return false;
+  }  
+  return true; 
+}
+
+
+/**
+ * 년월일 validation checking 
+ * param : objYear,objMonth,objDay
+ * return : boolean
+ */
+function checkDate(objYear,objMonth,objDay)
+{
+
+  var sYear = Trim(objYear.value);
+  var sMonth = Trim(objMonth.value);
+  var sDay = Trim(objDay.value);
+
+
+  if(sYear.length<1||sYear.length!=4)
+  {
+    alert("년도는 4자리입니다!");
+    objYear.focus();
+    return false;
+  }
+  if(sMonth.length<1||sMonth.length!=2)
+  {
+    alert("월은 2자리입니다!");
+    objMonth.focus();
+    return false;
+  }
+  if(sDay.length<1||sDay.length!=2)
+  {
+    alert("날짜는 2자리입니다!");
+    objDay.focus();
+    return false;
+  }
+  if(!isNumber(sYear))
+  {
+    alert("년도는 숫자만 입력하십시요!");
+    objYear.focus();
+    return false;
+  }
+  if(!isNumber(sMonth))
+  {
+    alert("월은 숫자만 입력하십시요!");
+    objMonth.focus();
+    return false;
+  }
+  if(!isNumber(sDay))
+  {
+    alert("날짜는 숫자만 입력하십시요!");
+    objDay.focus();
+    return false;
+  }
+
+  var days = lastDay(sYear + sMonth);
+
+  if((sMonth == '00')||(sMonth >12))
+  {
+    alert(objMonth+'월의 입력이 잘못 되었습니다!');
+    objMonth.focus();
+    return false;
+  } 
+
+  if((sDay > days)||(sDay == '00'))
+  {
+    alert(sDay+"일의 입력이 잘못되었습니다!");
+    objDay.focus();
+    return false;
+  } 
+  return true; 
+}
+
+/**
+ * 주어진 년월의 몇개월 전후의 년월을 구한다.
+ * param : yyyy,mm,how,anb
+ * return : String
+ */
+function getYYYYMM(yyyy,mm,how,anb)
+{
+  var year = yyyy * 1;
+  var month = mm * 1;
+  var cnt  = how * 1;
+
+  for(var i=1; i< cnt+1; i++)
+  {
+    if(anb == '-')
+    {
+      month = month - 1;
+      if(month==0)
+      {
+        year = year - 1;
+        month = 12;
+      }
+    }
+    else if(anb == '+')
+    {
+      month = month + 1;
+      if(month>12)
+      {
+        year = year + 1;
+        month = 1;
+      }
+    }
+    else
+    {
+    }
+  }
+  return year.toString()+addZero(month.toString());
+}
+
+/**
+ * 조회년월 validation checking 
+ * param : objYear, objMonth
+ * return : boolean
+ */
+function isYearMonth(objYear,objMonth)
+{
+  var objYear = Trim(objYear.value);
+  var objMonth  = Trim(objMonth.value);
+
+  if(objYear.length<1||objYear.length!=4)
+  {
+    return false;
+  }
+  if(objMonth.length<1||objMonth.length!=2)
+  {
+    return false;
+  }
+  if(!isNumber(objYear))
+  {
+    return false;
+  }
+  if(!isNumber(objMonth))
+  {
+    return false;
+  }
+  if((objMonth == '00') ||(objMonth >12))
+  {
+    return false;
+  }
+  return true; 
+}
+
+/**
+ * 쿠키 설정. 
+ * param : name, value
+ */
+function setCookie(name, value)
+{
+  var path = "/";  
+  var expires = 1;  //하루.
+  var domain = "";  
+
+  var today = new Date();
+  today.setDate(today.getDate() + expires );
+
+  document.cookie = name + "=" + escape(value)+ "; path=" + path ;
+}
+
+/**
+ * 팝업창 닫기
+ * param : element, name
+ */
+function closePopUp(element, name)
+{
+  if ( element.checked )
+  {
+    setCookie(name, "sleep");
+  }
+  window.close();
+}
+
+/**
+ * 쿠키정보 가져오기
+ * param : name
+ */
+function getCookie(name)
+{
+  var sCookieName = name + "=";
+  var i = 0;
+  var j;
+  var endOfCookie;
+  
+  while ( i <= document.cookie.length )
+  {
+    j = (i+sCookieName.length);
+
+    if ( document.cookie.substring(i,j) == sCookieName )
+    {
+      if ( (endOfCookie=document.cookie.indexOf( ";", j )) == -1 )
+      {
+        endOfCookie = document.cookie.length;
+      }
+      return unescape( document.cookie.substring( j, endOfCookie ) );
+    }
+
+    i = document.cookie.indexOf( " ", i ) + 1;
+    if (i == 0)
+    {
+      break;
+    }
+  }
+  return "";
+}
+
+ 
+
+//Calendar Event 적용....
+
+
+/**
+ * 그리드에서 달력불러오기
+ * param : Grid이름, 해당Row,해당 Col,Dot여부
+ */
+function gridcalendar(gObjId, gRow, gCol, gDot)
+{
+  if (gDot == null) gDot = "N";
+  window.open("/js/calendar.jsp?gObjId="+gObjId+"&gRow="+gRow+"&gCol="+gCol+"&isDot=" + gDot,
+               "calendarWindow","toolbar=no,status=no,menubar=0,resizable=0,"+
+               "copyhistory=0,width=260,height=260,left=" + positionWidth(200)+ 
+               ",top=" + positionHeight(260));
+}
+
+/**
+ * 달력불러오기
+ * param : 폼이름, 해당필드명
+ */
+function calendar(formname, objectname)
+{
+   window.open("/js/calendar.jsp?formname="+formname+"&objectName="+objectname+"&isDot=N",
+               "calendarWindow","toolbar=no,status=no,menubar=0,resizable=0,"+
+               "copyhistory=0,width=260,height=260,left=" + positionWidth(200)+ 
+               ",top=" + positionHeight(260));
+}
+
+
+/**
+ * 달력불러오기(위치, 사용자 지정)
+ * param : 폼이름, 해당필드명, 위치(Width, Height)
+ */
+function calendarxy(formname,objectname, width, height)
+{
+   window.open("/js/calendar.jsp?formname="+formname+"&objectName="+objectname,
+               "calendarWindow","toolbar=no,status=no,menubar=0,resizable=0,"+
+               "copyhistory=0,width=260,height=260,left=" + positionWidth(width)+ 
+               ",top=" + positionHeight(height));
+}
+
+/**
+ * 달력불러오기
+ * param : 폼이름, 해당필드명
+ */
+function calendarDot(formname,objectname)
+{
+   window.open("/js/calendar.jsp?formname="+formname+"&objectName="+objectname+"&isDot=Y",
+               "calendarWindow","toolbar=no,status=no,menubar=0,resizable=0,"+
+               "copyhistory=0,width=260,height=260,left=" + positionWidth(200)+ 
+               ",top=" + positionHeight(260));
+}
+
+/**
+ * 달력불러오기(위치, 사용자 지정)
+ * param : 폼이름, 해당필드명, 위치(Width, Height)
+ */
+function calendarDotxy(formname,objectname, width, height)
+{
+   window.open("/js/calendar.jsp?formname="+formname+"&objectName="+objectname+"&isDot=Y",
+               "calendarWindow","toolbar=no,status=no,menubar=0,resizable=0,"+
+               "copyhistory=0,width=260,height=260,left=" + positionWidth(width)+ 
+               ",top=" + positionHeight(height));
+}
+
+//Calendar Event 적용....
+
+ 
+
+/* 그리드 이벤트 적용 2002-08-20 */  
+
+/**
+ * 그리드에서 달력불러오기
+ * param : Grid이름, 해당Row,해당 Col,Dot여부
+ */
+function gridcalendar(gObjId, gRow, gCol, gDot, nextEvent)
+{
+  if (gDot == null) gDot = "N";
+  
+  if (nextEvent == undefined)
+  { 
+    window.open("/js/calendar.jsp?gObjId="+gObjId+"&gRow="+gRow+"&gCol="+gCol+"&isDot="+gDot,
+                 "calendarWindow","toolbar=no,status=no,menubar=0,resizable=0,"+
+                 "copyhistory=0,width=260,height=260,left=" + positionWidth(200)+ 
+                 ",top=" + positionHeight(260));
+  }
+  else
+  {
+    window.open("/js/calendarEvnt.jsp?gObjId="+gObjId+"&gRow="+gRow+"&gCol="+gCol+"&isDot="+gDot+"&nextEvent="+nextEvent,
+               "calendarWindow","toolbar=no,status=no,menubar=0,resizable=0,"+
+               "copyhistory=0,width=260,height=260,left=" + positionWidth(200)+ 
+               ",top=" + positionHeight(260));
+  }
+}
+
+/**
+ * 달력불러오기
+ * param : 폼이름, 해당필드명
+ */
+function calendar(formname, objectname, nextEvent)
+{
+  if(nextEvent == undefined)
+  {
+    window.open("/js/calendar.jsp?formname="+formname+"&objectName="+objectname+"&isDot=N",
+               "calendarWindow","toolbar=no,status=no,menubar=0,resizable=0,"+
+               "copyhistory=0,width=260,height=260,left=" + positionWidth(200)+ 
+               ",top=" + positionHeight(260));
+  }
+  else
+  {
+    window.open("/js/calendarEvnt.jsp?formname="+formname+"&objectName="+objectname+"&isDot=N&nextEvent="+nextEvent,
+               "calendarWindow","toolbar=no,status=no,menubar=0,resizable=0,"+
+               "copyhistory=0,width=260,height=260,left=" + positionWidth(200)+ 
+               ",top=" + positionHeight(260));
+  }
+}
+
+
+/**
+ * 달력불러오기(위치, 사용자 지정)
+ * param : 폼이름, 해당필드명, 위치(Width, Height)
+ */
+function calendarxy(formname,objectname, width, height, nextEvent)
+{
+  if(nextEvent == undefined)
+  {
+    window.open("/js/calendar.jsp?formname="+formname+"&objectName="+objectname,
+               "calendarWindow","toolbar=no,status=no,menubar=0,resizable=0,"+
+               "copyhistory=0,width=260,height=260,left=" + positionWidth(width)+ 
+               ",top=" + positionHeight(height));
+  }
+  else
+  {
+    window.open("/js/calendarEvnt.jsp?formname="+formname+"&objectName="+objectname+"&nextEvent="+nextEvent,
+               "calendarWindow","toolbar=no,status=no,menubar=0,resizable=0,"+
+               "copyhistory=0,width=260,height=260,left=" + positionWidth(width)+ 
+               ",top=" + positionHeight(height));
+  }
+}
+
+/**
+ * 달력불러오기
+ * param : 폼이름, 해당필드명
+ */
+function calendarDot(formname,objectname, nextEvent)
+{
+  if(nextEvent == undefined)
+  {
+   window.open("/js/calendar.jsp?formname="+formname+"&objectName="+objectname+"&isDot=Y",
+               "calendarWindow","toolbar=no,status=no,menubar=0,resizable=0,"+
+               "copyhistory=0,width=260,height=260,left=" + positionWidth(200)+ 
+               ",top=" + positionHeight(260));
+  }
+  else
+  {
+   window.open("/js/calendarEvnt.jsp?formname="+formname+"&objectName="+objectname+"&isDot=Y&nextEvent="+nextEvent,
+               "calendarWindow","toolbar=no,status=no,menubar=0,resizable=0,"+
+               "copyhistory=0,width=260,height=260,left=" + positionWidth(200)+ 
+               ",top=" + positionHeight(260));
+  }
+}
+
+/**
+ * 달력불러오기(위치, 사용자 지정)
+ * param : 폼이름, 해당필드명, 위치(Width, Height)
+ */
+function calendarDotxy(formname,objectname, width, height, nextEvent)
+{
+  if(nextEvent == undefined)
+  {
+    window.open("/js/calendar.jsp?formname="+formname+"&objectName="+objectname+"&isDot=Y",
+               "calendarWindow","toolbar=no,status=no,menubar=0,resizable=0,"+
+               "copyhistory=0,width=260,height=260,left=" + positionWidth(width)+ 
+               ",top=" + positionHeight(height));
+  }
+  else
+  {
+    window.open("/js/calendarEvnt.jsp?formname="+formname+"&objectName="+objectname+"&isDot=Y&nextEvent="+nextEvent,
+               "calendarWindow","toolbar=no,status=no,menubar=0,resizable=0,"+
+               "copyhistory=0,width=260,height=260,left=" + positionWidth(width)+ 
+               ",top=" + positionHeight(height));
+  }
+}
+
+/*그리드 이벤트 적용 */
+
+ 
+
+ 
+
+
+/**
+ * 위치지정(가로)
+ * param : width
+ */
+function positionWidth(width)
+{ 
+  var x = (screen.width - width)/2; 
+  return x 
+}
+
+/**
+ * 위치지정(세로)
+ * param : height
+ */
+function positionHeight(height)
+{ 
+  var y = (screen.height - height)/2; 
+  return y 
+}
+
+/**
+ * 코드조회
+ * param : (폼이름, 입력 받을객체이름, 코드조회화면명, 조회코드명칭레이블, 분류코드,조회명칭 위치크기,날짜);
+ *          날짜 : 날짜를 입력하지 않으면 현재 시점을 기준으로 코드조회를 한다.
+ *                 날짜를 입력하면 해당 날짜에 해당하는 코드를 조회할 수 있다.
+ */
+function popupCode(myformnm,textnm,idx,title,codeFieldNm,codecls,nameFieldSize,strdate) 
+{
+  str = "/js/codejl.jsp?pformnm="+myformnm+"&";
+  str = str + "ptextnm=" + textnm + "&";
+  str = str + "pidx=" + idx + "&";
+  str = str + "psearchnm=&";
+  str = str + "ptitle="+title+"&";
+  str = str + "pnamefield="+codeFieldNm+"&";
+  str = str + "pcodecls="+codecls+"&";
+  str = str + "pstrdate="+strdate+"&";
+  str = str + "pnamefieldsize="+nameFieldSize;
+  newwin = window.open(str,"sel",
+           "height=350,width=500,toolbar=no,scrollbars=yes,resizable=yes,menubar=no,location=no");
+}
+
+/**
+ * 코드조회(위치지정가능)
+ * param : (폼이름, 입력 받을객체이름, 코드조회화면명, 조회코드명칭레이블, 분류코드,조회명칭 위치크기,날짜);
+ *          날짜 : 날짜를 입력하지 않으면 현재 시점을 기준으로 코드조회를 한다.
+ *                 날짜를 입력하면 해당 날짜에 해당하는 코드를 조회할 수 있다.
+ */
+function popupCodexy(myformnm,textnm,idx,title,codeFieldNm,codecls,nameFieldSize,strdate,width, height) 
+{
+  str = "/js/codejl.jsp?pformnm="+myformnm+"&";
+  str = str + "ptextnm=" + textnm + "&";
+  str = str + "pidx=" + idx + "&";
+  str = str + "psearchnm=&";
+  str = str + "ptitle="+title+"&";
+  str = str + "pnamefield="+codeFieldNm+"&";
+  str = str + "pcodecls="+codecls+"&";
+  str = str + "pstrdate="+strdate+"&";
+  str = str + "pnamefieldsize="+nameFieldSize;
+  newwin = window.open(str,"pop",
+           "height=350,width=500,toolbar=no,scrollbars=yes,resizable=yes,menubar=no,location=no,left=" + positionWidth(width)+ 
+               ",top=" + positionHeight(height));
+}
+/**
+ * 콩통테이블 Object 에서 팝업(Grid 버젼)
+ * param : formname, 코드 Object명,이름Object 명, 구분(Nat,Cur)
+ */
+function popupCodeEX(formname, objectcName, objectnmName, codecls)
+{
+      //alert(codecls);
+      var target = "/js/codepopjl.jsp?formname="+formname+"&objectcName=" + objectcName +"&objectnmName=" + objectnmName+"&codeCls=" + codecls;
+      //var popWin = window.open(target, "NatPop", "left=200,top=30,width=350,height=500,toolbar=no,menubar=no,status=no,scrollbars=no,resizable=no");
+       var popWin = window.open(target, "CurPop", "left=200,top=30,width=460,height=350,toolbar=no,menubar=no,status=no,scrollbars=no,resizable=no");
+      popWin.focus();            
+                 
+}
+
+/**
+ * 우편번호 검색
+ * param : (폼이름, 우편번호필드이름, 주소1필드이름, 주소2필드이름);
+ */
+function findZipCode(formName,ZipName,AddrName, AddrName2)
+{
+   var winOpts='width=500,height=265, status=no, resizable=0, scrollbars=no'; 
+   url = "/js/postcode_find.jsp" +
+           "?formName=" + formName +
+           "&ZipName=" + ZipName +
+           "&AddrName=" + AddrName +
+           "&AddrName2=" + AddrName2;
+   ZipCodeWindow = window.open(url, "FindZipCode", winOpts);
+   ZipCodeWindow.focus();
+}   
+
+function MM_preloadImages() 
+{ //v3.0
+  var d=document; if(d.images){ if(!d.MM_p) d.MM_p=new Array();
+    var i,j=d.MM_p.length,a=MM_preloadImages.arguments; for(i=0; i<a.length; i++)
+    if (a[i].indexOf("#")!=0){ d.MM_p[j]=new Image; d.MM_p[j++].src=a[i];}}
+}
+function MM_swapImgRestore() 
+{ //v3.0
+  var i,x,a=document.MM_sr; for(i=0;a&&i<a.length&&(x=a[i])&&x.oSrc;i++) x.src=x.oSrc;
+}
+function MM_findObj(n, d) 
+{ //v4.0
+  var p,i,x;  if(!d) d=document; if((p=n.indexOf("?"))>0&&parent.frames.length) {
+  d=parent.frames[n.substring(p+1)].document; n=n.substring(0,p);}
+  if(!(x=d[n])&&d.all) x=d.all[n]; for (i=0;!x&&i<d.forms.length;i++) x=d.forms[i][n];
+  for(i=0;!x&&d.layers&&i<d.layers.length;i++) x=MM_findObj(n,d.layers[i].document);
+  if(!x && document.getElementById) x=document.getElementById(n); return x;
+}
+function MM_swapImage() 
+{ //v3.0
+  
+  var i,j=0,x,a=MM_swapImage.arguments; document.MM_sr=new Array; for(i=0;i<(a.length-2);i+=3)
+   if ((x=MM_findObj(a[i]))!=null){document.MM_sr[j++]=x; if(!x.oSrc) x.oSrc=x.src; x.src=a[i+2];}
+}
+
+ 
+
+/**
+ * 공통코드조회
+ * param : (코드분류명, 입력받을 폼이름, 코드조회값, 코드명 필드 네임, 코드값 필드 네임);
+ */        
+function searchCodeName(sCdClass, sFrmName, sCdValue, sNameField, sValueField) {
+   
+  //코드조회를 위한 폼에 값 할당
+  frmCd = document.frmComCode;
+  frmCd.txtCdClass.value = sCdClass;
+  frmCd.txtFrmNm.value   = sFrmName;
+  frmCd.txtCdValue.value = sCdValue;
+  frmCd.txtObjNm.value   = sNameField;
+  frmCd.txtObjVal.value  = sValueField;
+  
+  //코드조회를 위해 폼 submit
+  frmCd.action = "/js/getcodejs.jsp";
+  frmCd.method = "post";
+  frmCd.target = "ifrComBlank";
+  frmCd.submit();
+}
+
+/**
+ * 공통테이블 그리드,contool 에서 팝업
+ * param : Grid이름, 해당Row,코드 col,명 col, 구분(Nat,Cur)
+ */
+function gridCoPop(gObjId, gRow, cCol,nmCol, gTp)
+{
+               
+            
+switch (gTp.substr(0,3))
+  {
+    case "Nat": //국가코드 팝업 
+      var target = "/js/natpopjl.jsp?gObjId="+gObjId+"&gRow=" + gRow +"&cCol=" + cCol +"&nmCol=" + nmCol + "&gTp=" + gTp;
+      var popWin = window.open(target, "NatPop", "left=200,top=30,width=460,height=350,toolbar=no,menubar=no,status=no,scrollbars=no,resizable=no");
+      popWin.focus();            
+      break;      
+   
+    case "Cur" : //통화코드 팝업      
+      var target = "/js/curpopjl.jsp?gObjId="+gObjId+"&gRow=" + gRow +"&cCol=" + cCol +"&nmCol=" + nmCol + "&gTp=" + gTp;
+      var popWin = window.open(target, "CurPop", "left=200,top=30,width=460,height=350,toolbar=no,menubar=no,status=no,scrollbars=no,resizable=no");
+      popWin.focus();    
+      break;
+    
+  }
+                 
+}
+
+/**
+ * 공통테이블 Object 에서 팝업
+ * param : formname, 코드 Object명,이름Object 명, 구분(Nat,Cur)
+ */
+function coPop(formname, objectcName, objectnmName, gTp)
+{
+
+switch (gTp.substr(0,3))
+  {    
+    case "Nat": //국가코드 팝업 
+      var target = "/js/natpopjl.jsp?formname="+formname+"&objectcName=" + objectcName +"&objectnmName=" + objectnmName+"&gTp=" + gTp;
+      var popWin = window.open(target, "NatPop", "left=200,top=30,width=460,height=350,toolbar=no,menubar=no,status=no,scrollbars=no,resizable=no");
+      popWin.focus();            
+      break;
+   
+    case "Cur" : //통화코드 팝업      
+      var target = "/js/curpopjl.jsp?formname="+formname+"&objectcName=" + objectcName +"&objectnmName=" + objectnmName+"&gTp=" + gTp;
+      var popWin = window.open(target, "CurPop", "left=200,top=30,width=460,height=350,toolbar=no,menubar=no,status=no,scrollbars=no,resizable=no");
+      popWin.focus();    
+      break;    
+  }
+                 
+}
+
+
+/**
+ * 공통테이블 그리드,contool 에서 팝업
+ * param : Grid이름, 해당Row,코드 col,명 col, 구분(Nat,Cur)
+ */
+function gridCoPopEX1(gObjId, gRow, cCol,nmCol,engnmCol, gTp)
+{
+               
+            
+switch (gTp)
+  {
+    case "NatEX1": //국가코드 팝업 
+      var target = "/js/natpopjl.jsp?gObjId="+gObjId+"&gRow=" + gRow +"&cCol=" + cCol +"&nmCol=" + nmCol +"&engnmCol=" + engnmCol + "&gTp=" + gTp;
+      var popWin = window.open(target, "NatPop", "left=200,top=30,width=460,height=350,toolbar=no,menubar=no,status=no,scrollbars=no,resizable=no");
+      popWin.focus();            
+      break;      
+  }
+                 
+}
+
+/**
+  * 공통테이블 Object 에서 팝업
+  * param : formname, 코드 Object명,이름Object 명, 구분(Nat,Cur)
+  */
+function coPopEX1(formname, objectcName, objectnmName,objectengnmName, gTp)
+{
+
+switch (gTp)
+  {
+    case "NatEX1": //국가코드 팝업 
+      var target = "/js/natpopjl.jsp?formname="+formname+"&objectcName=" + objectcName +"&objectnmName=" + objectnmName+"&objectengnmName=" + objectengnmName+"&gTp=" + gTp;
+      var popWin = window.open(target, "NatPop", "left=200,top=30,width=460,height=350,toolbar=no,menubar=no,status=no,scrollbars=no,resizable=no");
+      popWin.focus();            
+      break;
+  }
+                 
+}
+
+/**
+ * 콩통테이블 Object 에서 팝업
+ * param : formname, 코드 Object명,이름Object 명, 구분(Nat,Cur)
+ */
+function coPopEX3(formname, objectcName, objectnmName,objectengnmName,objectcrdtRatg,objectestDate,objectoldNatC, gTp)
+{
+switch (gTp)
+  {
+    case "NatEX3": //국가코드 팝업    
+      var target = "/js/natpopjl.jsp?formname="+formname+"&objectcName=" + objectcName +"&objectnmName=" + objectnmName+"&objectengnmName=" + objectengnmName+"&objectcrdtRatg=" + objectcrdtRatg+"&objectestDate=" + objectestDate+"&objectoldNatC=" + objectoldNatC+"&gTp=" + gTp;
+      var popWin = window.open(target, "NatPop", "left=200,top=30,width=460,height=350,toolbar=no,menubar=no,status=no,scrollbars=no,resizable=no");
+      popWin.focus();            
+      break;
+  }
+                 
+}
+/**
+  * 국별지역코드테이블 Object 에서 팝업
+  * param : formname, 코드 Object명,이름Object 명, 국가코드
+  */
+function natZonePop(formname, objectcName, objectnmName, natC)
+{
+      var target = "/js/natzonepopjl.jsp?formname="+formname+"&objectcName=" + objectcName +"&objectnmName=" + objectnmName+"&natC=" + natC;
+      var popWin = window.open(target, "NatZonePop", "left=200,top=30,width=460,height=400,toolbar=no,menubar=no,status=no,scrollbars=no,resizable=no");
+      popWin.focus();                     
+}
+/**
+  * 국별지역코드테이블 그리드,contool 에서 팝업
+  * param : Grid이름, 해당Row,코드 col,명 col,국가코드
+  */
+function gridNatZonePop(gObjId, gRow, cCol,nmCol, natC)
+{
+      var target = "/js/natzonepopjl.jsp?gObjId="+gObjId+"&gRow=" + gRow +"&cCol=" + cCol +"&nmCol=" + nmCol + "&natC=" + natC;
+      var popWin = window.open(target, "NatZonePop", "left=200,top=30,width=460,height=400,toolbar=no,menubar=no,status=no,scrollbars=no,resizable=no");
+      popWin.focus();    
+                 
+}
+/**
+  * 콤마를 추가한 숫자형태 문자열로 반환
+  * param : frm
+  * return : String
+  */
+
+function CommaNum(frm)
+{
+  var me=frm;
+  //var str=me.value;
+  var fType=""; 
+ 
+ if (me.value.length <= 3||me.value == "") return;
+
+ var Len, TLen, i, j;
+ var strFormat, varFormat, meValue, DotValue;
+
+ if (fType == " ") 
+ {
+  meValue = me.value;
+  Tlen = meValue.length - 1;
+  i = 0;
+  varFormat = "";
+
+  while (i <= Tlen)
+
+  {
+
+   if (meValue.substr(i,1) != ",")
+    varFormat = varFormat + meValue.substr(i,1);
+
+   i = i + 1;
+
+  }   
+
+  me.value = varFormat;
+
+ }
+ else
+ { 
+  meValue = me.value;
+  Tlen = meValue.length - 1;
+
+  i = 0;
+
+  varFormat = "";
+
+  while (i <= Tlen)
+
+  {
+   if (meValue.substr(i,1) != ",")
+   {
+    varFormat = varFormat + meValue.substr(i,1);
+   }
+
+   i = i + 1;   
+   
+  }      
+
+
+  meValue = varFormat;
+  Tlen = meValue.length - 1;
+  i = 0;
+  DotValue = "";
+
+  while (i <= Tlen)
+
+  {
+   if (meValue.substr(i,1) == ".")
+   {
+    DotValue = meValue.substr(i);
+    meValue  = meValue.substr(0, i);
+   }
+   i = i + 1   
+  }        
+
+  if(meValue.substr(0,1)=="-")
+  {
+   meValue = meValue; 
+  } 
+
+
+  Tlen = meValue.length;
+
+  i = Tlen - 1;
+
+  varFormat = "";
+
+  while (i > 2)
+
+  {
+
+   strFormat = meValue.substr(i-2,3);
+
+   if (i == (Tlen -1))
+
+    varFormat = ","+strFormat;
+
+   else
+
+    varFormat = ","+strFormat+varFormat;
+
+   i = i - 3;
+
+  }
+
+  varFormat = meValue.substr(0,i+1)+varFormat;
+
+  Tlen=varFormat.length;
+
+  if(varFormat.substr(0,1) == "-"){
+   if (varFormat.substr(1,1)==","){
+ 
+    varFormat=varFormat.substr(0,1)+varFormat.substr(2,Tlen-2);
+
+    me.value = varFormat+DotValue;
+
+   }
+
+  }
+
+  //if (meValue.substr(0,1) == "-")
+
+  // varFormat = "-"+varFormat;
+
+  me.value = varFormat+DotValue;
+ }
+}
+
+//도움말 기능 호출함수
+function viewHelp(scrnNo)
+{
+// alert(scrnNo);
+ var option = "toolbar=0,location=0,directories=0,status=0,menubar=0,scrollbars=1,resizeable=0,width=700,height=450";
+// var win = window.open("/biz/im/imd/jsp/help.htm","help",option);
+ var url = "/biz/im/imd/jsp/help.jsp?scrnNo="+scrnNo.value;
+ var win = window.open(url,"help",option);
+}
+
+//********************
+//* ,를 제거한다.
+//********************
+function fncReplace(str) {
+var tmpStr = "";
+var retStr = "";
+for (i=0; i<str.length; i++) {
+tmpStr = str.charAt(i);
+if (tmpStr != ",")
+retStr += tmpStr;
+}
+return retStr;
+} 2005/12/27 17:23  

@@ -1,0 +1,32 @@
+<%@ page language="java" contentType="text/html;charset=euc-kr" %>
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Frameset//EN" "http://www.w3.org/TR/html4/frameset.dtd">
+<html>
+<head>
+<title>삼성네트웍스 통합 기간 시스템</title>
+<script>
+function initPop() {
+    opts="height=450,width=580,scrollbars=yes,resizable=yes";
+ window.open('/sg/util/viewsession.jsp?url=/index.jsp', "src", opts);
+}
+</script>
+</head>
+
+<frameset rows="532*" cols="185,*" frameborder="NO" border="0" framespacing="0">
+  <frame src="/menu/left_main.jsp" name="leftFrame" scrolling="NO" noresize>
+  <frameset rows="61,*" cols="850" framespacing="0" frameborder="NO" border="0">
+    <frame src="/menu/top_main.jsp" name="topFrame" scrolling="NO" noresize>
+    <frameset rows="*" cols="850,*" framespacing="0" frameborder="NO" border="0">
+      <frame src="/notice.jsp" name="content">
+      <frame src="/blank.html" name="blankRight"scrolling="NO" noresize>
+    </frameset>
+  </frameset>
+</frameset>
+
+<noframes>
+<body></body>
+</noframes>
+</html>
+
+ 
+
+ 

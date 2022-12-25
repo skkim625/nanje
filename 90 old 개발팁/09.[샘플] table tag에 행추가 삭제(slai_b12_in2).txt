@@ -1,0 +1,268 @@
+<%--
+================================================================================
+  프로그램ID : slai_b12_in2.jsp
+  프로그램명 : TVRO 방송결과 조회등록
+  작  성  자 : 류혁
+  작  성  일 : 2004-06-11
+  수정자(일) : 2004.09.01(류혁) bill_time추가
+  설     명  : TVRO 방송결과 조회등록을 위한 등록 페이지
+  call by jsp: slai_b10_in1.jsp
+================================================================================
+--%>
+<%@ include file="/include/page_init.jspf" %>
+
+<%-- 페이지처리를 위해서 포함--%>
+
+<%@ include file="/include/pagelist_header.jspf" %>
+<%--------------- Session 정보를 가져옴-----------------------------------------%>
+<%@ page import="common.util.UserSessionUtil" %>
+
+<%--------------- Core의 Helper package Import -----------------------------------------%>
+<%@ page import="snwsys.core.helper.jdbc.ResultMap " %>
+<%@ page import="snwsys.core.helper.param.ParameterHelper " %>
+
+<%--------------- Manager Class Import ---------------------------------------%>
+<%@ page import="snwsys.sl.ai.mgr.SLAIAddInfoManager" %>
+
+
+<%-------------- ParameterHelper 객체 생성 -------------------------------------%>
+<jsp:useBean id="param" scope="page" class="snwsys.core.helper.param.ParameterHelper">
+ <jsp:setProperty name="param" property="request" value="<%= request %>"/>
+</jsp:useBean>
+
+<%--------------- Manager 객체 생성 -------------------------------------------%>
+<jsp:useBean id="mgr" class="snwsys.sl.ai.mgr.SLAIAddInfoManager"/>
+
+<%--------------- Manager 객체의 비지니스 메소드 수행 -----------------------------------%>
+
+<%--------------- Manager 객체의 비지니스 메소드 수행 끝 --------------------------------%>
+
+<%--------------- 공통 스타일시트 및 자바스크립트 시작 ---------%>
+<link rel="stylesheet" type="text/css" href="/css/style.css">
+<script language="javascript" src="/script/common.js"></script>
+<script language="javascript" src="/script/sl_common.js"></script>
+<script language="javascript" src="/script/mk_common.js"></script>
+<script language="javascript" src="/script/mk_msg.js"></script>
+<%--------------- 공통 스타일시트 및 자바스크립트 끝 -----------%>
+
+<%-- 업무단 자바스크립트 함수들 --%>
+<script language=javascript>
+
+
+//only number check
+function onlyNumber()
+{
+ if ((event.keyCode<48)||(event.keyCode>57)){
+  event.returnValue=false;
+ }
+}
+
+
+//이전신설공사등록
+function onSave() {
+
+ sform = document.myform;
+
+ // rowcnt : 전체행의 갯수
+ var rowcnt = parseInt(document.myform.rowcnt.value,10);
+
+ //var rowcnt = sform.cnt.length-1;
+
+
+ for (var i=0; i < rowcnt; i++) {
+
+  if (sform["use_yn" + i].value == "Y") {
+
+   if (sform["new_broad_dt" + i].value == '') {
+    alert("방송일자를 입력해주십시요");
+    sform["new_broad_dt" + i].focus();
+    return;
+   }
+
+   if (sform["new_start_tm_hour" + i].value == '') {
+    alert("시작시간을 입력해주십시요");
+    sform["new_start_tm_hour" + i].focus();
+    return;
+   }
+
+   if (sform["new_start_tm_minutes" + i].value == '') {
+    alert("시작시간을 입력해주십시요");
+    sform["new_start_tm_minutes" + i].focus();
+    return;
+   }
+   if (sform["new_end_tm_hour" + i].value == '') {
+    alert("종료시간을 입력해주십시요");
+    sform["new_end_tm_hour" + i].focus();
+    return;
+   }
+
+   if (sform["new_end_tm_minutes" + i].value == '') {
+    alert("종료시간을 입력해주십시요");
+    sform["new_end_tm_minutes" + i].focus();
+    return;
+   }
+
+   if (sform["new_real_time" + i].value == '') {
+    alert("방송시간을 입력해주십시요");
+    sform["new_real_time" + i].focus();
+    return;
+   }
+  }
+ }
+ 
+ sform.action = 'slai_b12_cm0.jsp';
+ sform.submit();
+ 
+} 
+
+
+/*
+ 행추가 함수
+*/
+function addRow() {
+
+ // rowcnt : 전체행의 갯수
+ var rowcnt = parseInt(document.myform.rowcnt.value,10);
+ var oRow = tbl1.insertRow();
+ oRow.id= "rowId"+rowcnt;
+
+ //checkbox
+ var oCell1 = oRow.insertCell();
+ oCell1.className = "addrow_item_value";
+ oCell1.align = "center";
+ oCell1.innerHTML = "<input type=hidden name='cnt'>" +
+      "<input type='checkbox' name='checkbox"+rowcnt+"'>"
+      + "<input type='hidden' name='use_yn" + rowcnt + "' value='Y'>";
+ 
+ //방송일자
+ var oCell2 = oRow.insertCell();
+ oCell2.className = "addrow_item_value";
+ oCell2.align = "center";
+ oCell2.innerHTML = "<input:text type='dttm' name='new_broad_dt"+rowcnt+"'  value='<%=bd_dt_from%>' maxlength='8' size='12' readOnly='true' />";
+
+ //이용구분
+ var oCell4 = oRow.insertCell();
+ oCell4.className = "addrow_item_value"
+ oCell4.align = "center";
+ oCell4.innerHTML = "<name='new_broad_tp"+rowcnt+"' maxlength='7' size='4' onFocus='javascript:this.select();' values='<%=bd_tp%>'><%=bd_tp%>";
+
+ //시작시간
+ var oCell5 = oRow.insertCell();
+ oCell5.className = "addrow_item_value";
+ oCell5.align = "center";
+ oCell5.innerHTML = "<input type=text name='new_start_tm_hour"+rowcnt+"'maxlength='2' size='3' onKeyPress='javascript:onlyNumber();'  value='<%=time_to1%>' align ='center' >" +
+      "&nbsp;:&nbsp;" +
+      "<input type=text name='new_start_tm_minutes"+rowcnt+"' maxlength='2' size='3' onKeyPress='javascript:onlyNumber();'  value='<%=time_to2%>' align ='center' >";
+
+ //종료시간          
+ var oCell6 = oRow.insertCell();
+ oCell6.className = "addrow_item_value";
+ oCell6.align = "center";
+ oCell6.innerHTML = "<input type=text name='new_end_tm_hour"+rowcnt+"'maxlength='2' size='3' onKeyPress='javascript:onlyNumber();'  value='<%=time_from1%>' align ='center' >"+
+      "&nbsp;:&nbsp;"          +
+      "<input type='text' name='new_end_tm_minutes"+rowcnt+"' maxlength='2' size='3' onKeyPress='javascript:onlyNumber();'  value='<%=time_from2%>' align ='center'>";
+ 
+ //방송시간(분)
+ var oCell7 = oRow.insertCell();
+ oCell7.className = "addrow_item_value";
+ oCell7.align = "center";
+ oCell7.innerHTML = "<input type='text' name='new_real_time"+rowcnt+"' maxlength='7' size='10' onFocus='javascript:this.select();' onKeyPress='javascript:onlyNumber();' value=''>";
+
+ //방송시간(분)
+ var oCell8 = oRow.insertCell();
+ oCell8.className = "addrow_item_value";
+ oCell8.align = "center";
+ oCell8.innerHTML = "<input type='text' name='new_bill_time"+rowcnt+"' maxlength='7' size='10' onFocus='javascript:this.select();' onKeyPress='javascript:onlyNumber();' value=''>";
+  
+ 
+ document.recalc();
+ document.myform.rowcnt.value = (rowcnt+1);
+
+}
+
+/*
+ 행삭제 함수
+*/
+function delRow()
+{
+ var myform = document.myform;
+ for ( i=0;i<parseInt(myform.rowcnt.value,10);i++)
+ {
+  if(myform["checkbox"+i].checked)
+  {
+   setDelRow(i);
+  }
+ }
+
+}
+
+/************************************************
+1.dispaly를 'none'으로 바꾼다
+2.행삭제란 로우는 use_yn Value을 "N"으로 바꾼다
+*************************************************/
+function setDelRow(i)
+{
+ var row = eval("rowId"+i);
+ row.style.display = "none";
+ document.myform["use_yn"+i].value = "N";
+}
+
+function onLoadPage(){
+ addRow();
+}
+
+</script>
+<%-- 업무단 자바스크립트 함수 끝 --%>
+
+</head>
+
+<body class="body_nomargin" onLoad="onLoadPage();">
+<form name="myform" method="post">
+ <%-- 페이지 호출시 parameter값 --%> 
+ <input type=hidden name="flag" value="<%=flag%>" >
+ <input type=hidden name="svc_detail_no" value="<%=svc_detail_no%>">
+ <input type=hidden name="add_gd" value="<%=add_gb%>">
+ <input type=hidden name="add_seq" value="<%=add_seq%>">
+ <input type=hidden name="day_of_week" value="<%=day_of_week%>">
+ <input type=hidden name="sale_emp_no" value="<%=sale_emp_no%>">
+ <input type=hidden name="bd_tp" value="<%=bd_tp%>">
+ <input type=hidden name="rowcnt" value="0">
+ <input type=hidden name="cnt">
+ <input type=hidden name="bd_dt_from" value="<%=bd_dt_from%>"> 
+
+ <%-- 저장/수정/취소 시작--%>
+
+
+ <table:space/>
+ <table width='780' border='0' align='center' cellpadding='0' cellspacing='0'>
+ <tr>
+  <td align='right' width="720">
+   <a href='javascript:addRow()'><img src='/images/but_rowAdd02.gif' width='16' height='16' border='0' align='absmiddle'> 방송결과추가</a>
+   <a href='javascript:delRow()'><img src='/images/but_rowDel02.gif' width='16' height='16' border='0' align='absmiddle'> 선택삭제</a>
+  </td>
+  <td align="right" width="*">
+   <table:button title="저장" onclick="onSave()"/>
+  </td>
+ </tr>
+ </table>
+ <table id="tbl1" width="780" border="0" align="center" cellpadding="1" cellspacing="1" class="upTableLine">
+ <%-- 헤더 부분 start --%>
+  <tr class="item_header">
+
+   <td align='center' width='4%'>선<br>택</td>
+   <td align='center' width='20%'>방송일자</td>
+   <td align='center' width='10%'>이용구분</td>
+   <td align='center' width='18%'>시작시간</td>
+   <td align='center' width='18%'>종료시간</td>
+   <td align='center' width='20%'>실방송시간(분)</td>
+   <td align='center' width='20%'>과금시간(분)</td>
+
+  </tr>
+ <%-- 헤더 부분 end --%>
+ </table>
+</form>
+<iframe name="CommandFrame" style="display:none"></iframe>
+</body>
+</html>
+
+                                                                                

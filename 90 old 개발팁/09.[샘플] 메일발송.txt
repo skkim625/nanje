@@ -1,0 +1,35 @@
+- unix batch로 sendMailSdiJDBC.sh 실행파일을 만들어 아래와 같이 정의하면 ipas.common.mail.SendMailSdiJDBC.java(db에서 대상자추출후 발송) 가 실행된다.
+
+ 
+
+#!/bin/sh
+
+### TODAY
+export RUN_DATE=`date +%C%y%m%d`  
+
+### JDK
+export JAVA_HOME=/usr/java14
+export PATH=$JAVA_HOME/bin
+export JAVA=$JAVA_HOME/bin/java
+
+### LAF/J
+export LAF_HOME=/app02/ipas2005/ipasroot/lafConf
+export D_LAF_HOME="-Dlaf.home=/app02/ipas2005/ipasroot/lafConf"
+
+### LIBRARY and FRAMEWORK
+export PJT_HOME=/app02/ipas2005/ipasroot/Ipas
+export BUSINESS_CLASS=$PJT_HOME/WEB-INF/classes
+export LIB_HOME=$PJT_HOME/WEB-INF/lib
+export LIBS="$LIB_HOME/lafj_II_2004.jar:$LIBS"
+export LIBS="$LIB_HOME/activation.jar:$LIBS"
+export LIBS="$LIB_HOME/mail.jar:$LIBS"
+export LIBS="$LIB_HOME/classes12.zip:$LIBS"
+
+### CLASSPATH
+export ALL_CLASSPATH="$LIBS:$BUSINESS_CLASS"
+
+export CMD=ipas.common.mail.SendMailSdiJDBC
+
+echo $JAVA $D_LAF_HOME -classpath $ALL_CLASSPATH $CMD
+    $JAVA $D_LAF_HOME -classpath $ALL_CLASSPATH $CMD $RUN_DATE
+

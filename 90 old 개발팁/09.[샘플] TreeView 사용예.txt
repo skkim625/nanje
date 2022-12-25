@@ -1,0 +1,785 @@
+<%
+Response.Buffer = True
+Response.Expires = -1
+Response.CacheControl = "no-cache"
+Response.AddHeader "Pragma", "no-cache"
+%>
+
+<!--#include virtual="/include/db_connection.asp"-->
+<!--#include virtual="/include/permission_check.asp"-->
+<!--#include virtual="/include/function.asp"-->
+<!--#include virtual="/include/default_path.asp"-->
+<!--#include virtual="/pdm/include/mail.asp"-->
+
+<%
+dim save_dir
+
+up_date = cstr(year(now))&lpad(cstr(month(now)),2,"0")&lpad(cstr(day(now)),2,"0")
+
+set up = Server.CreateObject("DEXT.FileUpload")
+
+'//-Funtion definition-------------------------------------------------------------------------
+'========= For DB Unique Key error treatment
+Function CheckForErrors(objConn)
+  Dim objError
+  
+  If objConn.Errors.Count>0 Then
+    For Each objError in objConn.Errors
+      If objError.Number<>0 Then
+%>
+    <center><table border="1">
+    <tr><td>Error Property</td><td>Contents</td></tr>
+    <tr><td>Number</td><td><%=objError.Number%></td></tr>
+    <tr><td>NativeError</td><td><%=objError.NativeError%></td></tr>
+    <tr><td>SQLState</td><td><%=objError.SQLState%></td></tr>
+    <tr><td>Source</td><td><%=objError.Source%></td></tr>
+    <tr><td>Description</td><td><%=objError.Description%></td></tr>
+    </table></center><p>  
+<%
+        CheckForErrors = True
+        
+        If cstr(objError.Number)="-2147217873" Then
+%>
+        <script language="JavaScript">
+        <!--
+        if (confirm("다른 Project원이 화일을 업로드 하고 있습니다.\n잠시 후 다시 시도하시기 바랍니다.\n\n다시 시도하시겠습니까?")) {
+          document.location.reload();
+        }
+        //end of JavaScript -->
+        </script>
+<%
+        End If  ' if unique key error
+      End If  ' If error happens
+    Next 'For loop
+  Else
+    CheckForErrors = False
+  End If
+End Function
+'========= DB error treatment
+
+Sub save_db
+  title=trim(replace(up.Form ("title"),"'","''"))
+ security=cstr(up.Form ("security"))
+ security_year=cstr(up.Form ("security_year"))
+ priority=cstr(up.Form ("priority"))
+ description = trim(replace(up.Form ("description"),"'","''"))
+ release_no = cstr(up.Form ("release_no"))
+ product_index = cstr(up.Form ("pc_key"))
+ file_type_index = cstr(up.Form ("ft_key"))
+  
+ save_dir = PDM_DATA_PATH & pjt_code & "\doc\"
+  
+  iSQL=" insert into pdm_file_info_t " &_
+   " ( file_index, revision, folder_index, pjt_code, assy_level, parent_index, root_index,"&_
+   " release_no, title, security, security_year, save_dir, "&_
+   " priority, description, product_index, file_type_index, up_date, up_man )" &_  
+      " values('" & cstr(file_index) & "','"&cstr(revision)&"','" & cstr(folder_index) &_
+      "','" & cstr(pjt_code) & "','1','0','"& cstr(file_index) &_
+      "','" & cstr(release_no) & "','"+cstr(title) &_
+   "','" & cstr(security) & "','" & cstr(security_year) & "','" & cstr(save_dir) &_
+   "','" & cstr(priority) & "','" & cstr(description) &_
+   "','" & cstr(product_index) & "','" & cstr(file_type_index)& "','" & cstr(up_date) & "','" & cstr(viewer)  &"')"
+  conn.Execute(iSQL)
+  
+  If CheckForErrors(conn)=True Then error_flag = 1
+  
+  If opt=1 Then '=== for new revision
+    history_type = 1
+  Else
+    history_type = 2
+  End If
+  
+  iSQL=" insert into pdm_file_history_t " &_
+    " ( file_index, revision, pjt_code, "&_
+    " history_no, history_type, ip_addr, up_date, up_man )" &_  
+       " values('" & cstr(file_index) & "','"&cstr(revision)&"','"  & cstr(pjt_code) &_
+       "','1','"&history_type&"','" & cstr(ip_addr) & "','" & cstr(up_date) & "','"+cstr(viewer) &"')"
+  conn.Execute (iSQL)
+  
+  '// - for assigned job
+  uSQL = " update pdm_file_info_t set "&_
+       " master_no='" & master_no & "', job_2nd_idx ='" & job_2nd & "', job_3rd_idx ='"&third_index&"' " &_
+       " where pjt_code ='"& cstr(pjt_code) &"' and file_index ='"& cstr(file_index) &"' and revision ='"&cstr(revision)&"' "
+  conn.Execute (uSQL)
+End sub
+
+Sub save_file(file_number)
+  file_name = up.Form("file1").FileName
+
+  if file_name<>"" then
+     regi_num = cstr(file_index)
+     org_name=Mid(file_name,InstrRev(file_name,"\")+1) 'original file name
+     org_name = trim(replace(org_name,"'","''"))
+     ext = Mid(org_name,InstrRev(org_name,".")+1) ' extension 
+     save_name = cstr(regi_num)&"_"+cstr(revision)&"."+cstr(ext)
+
+     on error resume next
+
+     up.Form("file1").SaveAs save_dir & save_name
+  
+     if Err<>0 Then
+        Response.Write "It seems that following file ("& save_dir+save_name &") does not exist." &_
+    " Possible causes include: " &_
+    " <br> An incorrect filename was specified " &_
+    " <br> File permissions do not allow writing to the specified area " &_
+    " <br> Ask PDM team. "
+     Else
+        uSQL = " update pdm_file_info_t set "+_
+       " file_name='" & org_name & "', save_name ='" & save_name & "'" &_
+       " where  file_index='" & file_index & "' and pjt_code='"&pjt_code&"' and revision='"& revision &"'"
+        conn.Execute(uSQL)
+     End If
+  End If
+End sub
+'//-------------------------------------------------------------------------Funtion definition-
+
+viewer = request.cookies("eyesysuser")
+ip_addr = Request.ServerVariables ("REMOTE_HOST")
+
+if is_formdata=false then
+ pjt_code = request("pjt_code")
+ folder_index = request("folder_index")
+ opt = request("opt") ' option for new revision and etc -  1) revision = 1
+ mode = request("mode") '// if value is then_refresh, refresh parent window
+ If Not opt = 1 Then ' === for new revision
+  p_file_index = request("p_file_index")
+  p_revision = request("p_revision")
+ End If
+  
+ '// for job result report
+ imode = request("imode")  '// 2, job result report mode
+ master_no = request("master_no")
+ third_index = request("third_index") 
+else
+ pjt_code = up.Form("pjt_code")
+ folder_index = up.Form("folder_index")
+ opt = up.Form("opt") 
+ mode = up.Form("mode") 
+ If Not opt = 1 Then ' === for new revision
+  p_file_index = up.Form("p_file_index")
+  p_revision = up.Form("p_revision")
+ End If
+  
+ '// for job result report
+ imode = up.Form("imode")  '// 2, job result report mode
+ master_no = up.Form("master_no")
+ job_1st = up.Form("job_1st") '// only when submitted or changed
+ job_2nd = up.Form("job_2nd")
+ third_index = up.Form("third_index")
+End if
+
+'//-for job management------------------------------------------------------------------ 
+master_flag = 0
+index_flag = 0
+
+If Not Trim(master_no)="" and Not Trim(third_index)="" Then '// when third job is assigned
+  '// get first_index and second_index
+  s_sql = "select parent, parent_title, title from sch_avail_t " &_
+    " where pjt_code='"&pjt_code&"' and master_no='"&master_no&"' and index_no='"&third_index&"'"
+  set rs = conn.Execute(s_sql)
+  second_index =rs("parent")
+  second_title =rs("parent_title")
+  third_title =rs("title")
+  rs.close
+  
+  s_sql = "select parent, parent_title from sch_avail_t " &_
+    " where pjt_code='"&pjt_code&"' and master_no='"&master_no&"' and index_no='"&second_index&"'"
+  set rs = conn.Execute(s_sql)
+
+  If Not rs.eof Then
+    first_index =rs("parent")
+    first_title =rs("parent_title")
+  Else
+    first_index = "0000"
+    first_title = "기타 업무"
+  End If
+  rs.close
+  
+  s_sql = " select title from sch_master_t " &_
+    " where pjt_code='"&pjt_code&"' and master_no ='"&master_no&"'"
+  set rs = conn.Execute(s_sql)
+  master_title = rs("title")
+  rs.close
+  
+  master_flag = 1
+  index_flag = 1
+End If
+
+If Trim(master_no)="" Then '// when no default job index is assigned
+  s_sql = " select nvl(min(master_no),'_null_') m_m from sch_master_t " &_
+    " where pjt_code='"&pjt_code&"' "
+  set rs = conn.Execute(s_sql)
+  If Not rs("m_m")="_null_" Then
+    master_no = rs("m_m")
+    master_flag = 1
+  End If
+  rs.close
+  
+  s_sql = "select nvl(min(index_no),'_null_') m_i from sch_avail_t " &_
+    " where pjt_code='"&pjt_code&"' and master_no='"&master_no&"' and sch_level='1' "
+  set rs = conn.Execute(s_sql)
+  If Not rs("m_i")="_null_" Then
+    first_index =rs("m_i")
+    index_flag = 1
+  End If
+  rs.close
+End If
+
+If Not Trim(job_1st)="" and  Not Trim(job_2nd)="" Then '// when reloaded : to assign default job index in select TAG
+  second_index = job_2nd
+  first_index = job_1st
+End If
+'//------------------------------------------------------------------- for job management
+
+If Not opt=1 Then '=== for new revision
+  s_sql = "select * from pdm_file_info_t" & _
+          " where file_index='"&p_file_index&"' and pjt_code='"&pjt_code&"' and revision='"&p_revision&"'"
+  set rs = conn.Execute(s_sql)
+  p_title=rs("title")
+  p_folder_index=rs("folder_index")
+  p_description=rs("description")
+  p_product_index=rs("product_index")
+  p_file_type_index=rs("file_type_index")
+  p_release_no=rs("release_no")
+  doc_state=rs("doc_state")
+  rs.close
+  
+  If (doc_state="2" or doc_state="3") Then ' If not checked out
+%>
+<script language="JavaScript">
+<!--
+alert("문서가 Check Out 되어있으므로 New Revision을 입력할 수 없습니다.");
+history.back();
+//end of JavaScript -->
+</script>
+<%
+  End If
+End If
+
+revision = 1 ' revision for which is being inserted currently. will be changed by max+1 revision when opt = 2
+
+s_sql = " select k_name, rank_name, userid, team from tb_manmaster " &_
+  " where work_status='C' and empno='"+viewer+"'"
+set rs = conn.Execute(s_sql)
+k_name = rs("k_name")
+rank_name = rs("rank_name")
+userid = rs("userid")
+rs.close
+
+'// if no branch_code is assigned, assign the minimum code with initial 'C' and length = 4
+If Trim(folder_index)="" or Trim(folder_index)="_root_" Then
+  s_sql = " select min(branch_code) b_c from pjt_branch_t " &_
+   " where pjt_code='"&pjt_code&"' and " &_
+   " branch_code like 'C%' and vsize(branch_code)='4' "
+  set rs = conn.Execute(s_sql)
+  folder_index = rs("b_c")
+  rs.close
+Elseif len(folder_index)=1 Then
+  s_sql = " select min(branch_code) b_c from pjt_branch_t " &_
+   " where pjt_code='"&pjt_code&"' and " &_
+   " branch_code like '"&folder_index&"%' and vsize(branch_code)='4' "
+  set rs = conn.Execute(s_sql)
+  folder_index = rs("b_c")
+  rs.close
+End If
+
+s_sql = " select pjt_nickname, branch_name from act_pjt_t a, pjt_branch_t b " &_
+  " where a.pjt_code=b.pjt_code and " &_
+  " a.pjt_code='"&pjt_code&"' and " &_
+  " branch_code='"&folder_index&"'"
+set rs = conn.Execute(s_sql)
+
+if not rs.eof then
+pjt_nickname = rs("pjt_nickname")
+folder_title = rs("branch_name")
+end if
+rs.close
+
+'//--When submitted------------------------------------------------------------------------
+' ===== When submitted
+if GetReq("command")="save" then
+  If opt = 1 Then
+    ' index:  year(4 letters)+unique index(8 letters)
+    sSQL = " select nvl(max(file_index),'000000000000') from pdm_file_info_t " &_
+       " where pjt_code='"& pjt_code &"'"
+    set rs = conn.Execute(sSQL)
+    file_index = cint(right(rs(0),8)) + 1
+    file_index = lpad(cstr(file_index),8,"0")
+    file_index = mid(year(now),1,4) & file_index
+    rs.close
+    
+  Else ' === for new revision    'p_file_index    'p_revision
+    file_index = p_file_index  ' use previous file_index
+    sSQL = " select nvl(max(revision),'0') from pdm_file_info_t " &_
+       " where pjt_code='"& pjt_code &"' and file_index='"&p_file_index&"'"
+    set rs = conn.Execute(sSQL)
+    revision = cint(rs(0)) + 1
+    rs.close
+  End If
+  
+  On Error Resume Next ' For DB Unique Key error treatment
+  
+  error_flag = 0
+  
+  '===========================================================
+  conn.BeginTrans
+  
+  save_db ' insert to DB table
+  save_file(1)
+  
+  if cint(up.Form("mail"))<>0 then
+    sSQL = " select team_code from act_pjt_t where pjt_code='" & pjt_code & "'"
+    set rs = conn.Execute(sSQL)
+    team_code = rs("team_code")
+    rs.close
+    
+    mail_notify
+    ' input:1. from asp: userid, team_code, pjt_code, 
+    '   folder_index, title, description,
+    '   year(now), month(now), day(now)
+    '   k_name, rank_name 
+    '   2. from input form: mail
+  end if
+  
+  If error_flag=0 Then ' For DB Unique Key error treatment
+    conn.CommitTrans
+    
+    If mode = "then_refresh" Then '// in case of input from writing approval
+%>
+<script language="JavaScript">
+<!--
+opener.document.location.reload();
+window.close();
+//end of JavaScript -->
+</script>
+<%
+    Else
+      Response.Redirect "item_list.asp?pjt_code=" & pjt_code & "&folder_index=" & folder_index & "&page=0"
+    End If
+  Else
+    conn.RollbackTrans
+  End If
+End if
+'//-------------------------------------------------------------------------When submitted-
+%>
+
+<html>
+<head>
+<title></title>
+<meta http-equiv="Content-Type" content="text/html; charset=euc-kr">
+<link rel="stylesheet" href="/css/pdm.css" type="text/css">
+<script language="JavaScript">
+<!--
+function save_this()
+{
+  var frm = document.forms[0];
+  
+  if (frm.title.value=="") {
+    alert("제목을 입력 바랍니다");
+    frm.title.focus();
+    return;
+  }
+  if (frm.file1.value=="") {
+    alert("화일을 입력 바랍니다");
+    frm.file1.focus();
+    return;
+  }
+  if (frm.description.value=="") {
+    alert("화일설명을 입력 바랍니다");
+    frm.description.focus();
+    return;
+  }
+  frm.pc_key.value = pc_tree_key.value;
+  if (frm.pc_key.value=="") {
+    alert("제품 분류를 입력 바랍니다");
+    return;
+  }
+  frm.ft_key.value = ft_tree_key.value;
+  if (frm.ft_key.value=="" || frm.ft_key.value=="0") {
+    alert("화일 분류를 입력 바랍니다");
+    return;
+  }
+  
+  if (confirm("자료를 등록 하시겠습니까?")) {
+    frm.command.value = "save";
+    frm.submit();
+  }    
+}
+
+function open_help_win(sURL)
+{
+  var _width = 790, _height = 600;
+  var _left = (screen.availWidth - _width) / 2;
+  var _top = (screen.availHeight - _height) / 2;
+  
+  var sName = "help_win";
+  var sFeatures = "menubar=no,toolbar=no,location=no,directories=no,status=no,scrollbars=yes,resizable=yes" +
+                  ",left=" + _left + ",top=" + _top + ",width=" + _width + ",height=" + _height;
+  window.open(sURL, sName, sFeatures);
+}
+
+function SelectKind()
+{
+  var re_url = "/pjt_note/worktable/get_1st_job.asp?pjt_code=<%=pjt_code%>&master_no=" +
+               document.forms[0].master_no.value;
+  ifrm_get_1st_job.location.href = re_rul;
+}
+
+function renew_2nd_job()
+{
+  var re_url = "/pjt_note/worktable/get_2nd_job.asp?pjt_code=<%=pjt_code%>&master_no=<%=master_no%>&index_no=" + 
+               document.forms[0].job_1st.value;
+ document.all.ifrm_get_2nd_job.src = re_url;
+}
+//end of JavaScript -->
+</script>
+<script language="VBScript">
+option explicit 
+dim adf
+Sub Window_OnLoad()
+  '=== 화일 분류 트리 구조 구성'
+  FileTypeTV.Font.Name = "굴림"
+  FileTypeTV.Font.Size = 10
+  
+  <%
+  ssql = "select * from pdm_file_type_t order by file_type_index asc"
+  set rs2 = conn.Execute(ssql)
+  while not rs2.eof
+    if  cstr(rs2("file_type_level"))="0" Then
+      Response.write vbCrLf & vbTab & _
+                     "FileTypeTV.Nodes.Add , ,""pd_class" & rs2("file_type_index") & """,""" & rs2("file_type_name") & """" & vbCrLf
+    else
+      Response.write vbCrLf & vbTab & _
+                     "FileTypeTV.Nodes.Add ""pd_class" & rs2("file_type_parent_index") & _
+                     """,4,""pd_class" & rs2("file_type_index") & ""","""  & rs2("file_type_name") & """" & vbCrLf
+    End if
+    rs2.movenext
+  wend
+  rs2.close
+  %>
+  FileTypeTV.Nodes("pd_class0").Expanded = true
+End Sub
+
+Private Sub ProductClassTV_NodeClick(node)
+  txtProductClassTV.value = " ("&mid(node.key,9)&") "& node.text 
+  pc_tree_key.value = mid(node.key,9)
+End Sub 
+
+Private Sub FileTypeTV_NodeClick(node)
+  txtFileTypeTV.value =  " ("&mid(node.key,9)&") "& node.text 
+  ft_tree_key.value = mid(node.key,9)
+End Sub
+</script>
+</head>
+
+<body>
+
+<!--#include virtual="/include/body_start.asp"-->
+
+<table border="0" cellspacing="0" cellpadding="0" width="800">
+<form name="form1" method="post" action="input_item.asp" enctype="multipart/form-data">
+<input type="hidden" name="command" value="">
+<input type="hidden" name="pjt_code" value="<%=pjt_code%>">
+<input type="hidden" name="opt" value="<%=opt%>">
+<input type="hidden" name="mode" value="<%=mode%>">
+<!--' === for new revision-->
+<input type="hidden" name="p_file_index" value="<%=p_file_index%>">
+<input type="hidden" name="p_revision" value="<%=p_revision%>">
+  <tr>
+    <td><img src="/images/e_brain/E02031201_title.gif" title="" alt="아이템 입력"></td>
+  </tr>
+  <tr>
+    <td class="MainTitleSpace"></td>
+  </tr>
+  <tr>
+    <td align="right">
+      <a href="javascript:open_help_win('/pdm/help/help08.asp');"><img src="/images/btn_help.gif" title="" alt="도움말"></a></td>
+  </tr>
+  <tr>
+    <td class="SubTitleSpace"></td>
+  </tr>
+  <tr>
+    <td class="TableTop"></td>
+  </tr>
+  <tr>
+    <td class="TableLine">
+      <table border="0" cellspacing="1" cellpadding="0" width="100%">
+        <tr>
+          <td class="InputTitle" width="15%">프로젝트명</td>
+          <td class="InputContents" width="35%"><%=pjt_nickname%></td>
+          <td class="InputTitle" width="15%">폴더명</td>
+          <td class="InputContents" width="35%"><%=folder_title%></td>
+        </tr>
+        <tr>
+          <td class="InputTitle">게시자</td>
+          <td class="InputContents"><%=k_name&" "&rank_name%></td>
+          <td class="InputTitle">게시날짜</td>
+          <td class="InputContents"><%=left(up_date,4)%>/<%=mid(up_date,5,2)%>/<%=right(up_date,2)%></td>
+        </tr>
+        <tr>
+          <td class="InputTitle">제 목</td>
+          <td class="InputContents" colspan="3">
+            <input type="text" name="title" value="<%If Not opt=1 Then%><%=p_title%><%End If%>" size="106" class="Input" style="width:648px;"></td>
+        </tr>
+        <tr>
+          <td class="InputTitle">업무구분</td>
+          <td class="InputContents" colspan="3">
+<%If master_flag=1 and index_flag=1 Then '// if any entity exists%>
+  <%If imode="2" Then '// job report mode%>
+            <table border="0" cellspacing="0" cellpadding="0" width="100%">
+              <tr>
+                <td>계획서 제목 : <%=master_title%><input type=hidden name="master_no" value='<%=master_no%>'></td>
+                <td>1차 : <%=first_title%><input type=hidden name="job_1st" value='<%=first_index%>'></td>
+              </tr>
+              <tr>
+                <td>2차 : <%=second_title%><input type=hidden name="job_2nd" value='<%=second_index%>'></td>
+                <td>3차 : <%=third_title%><input type=hidden name="third_index" value='<%=third_index%>'></td>
+              </tr>
+            </table>
+  <%Else%>
+            <table border="0" cellspacing="0" cellpadding="0" width="100%">
+              <tr>
+                <td>
+                  <select name="master_no" style="width:252px;" align="absmiddle" onChange="javascript:SelectKind();">
+                    <%
+                    sql = " select title, master_no from sch_master_t where pjt_code='"&pjt_code&"' "
+                    set rs = conn.Execute(sql)
+                    while not rs.eof
+                    %>
+                    <option value="<%=rs("master_no")%>"<%If rs("master_no")=master_no Then%> selected<%End If%>><%=rs("title")%></option>
+                    <%
+                      rs.movenext
+                    wend
+                    rs.close
+                    %>
+                  </select>
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  1차:
+                  <select name="job_1st" style="width:226px;" align="absmiddle" onChange="javascript:renew_2nd_job();">
+                    <%
+                    sql = " select title, index_no from sch_avail_t" & _
+                          " where sch_level='1' and pjt_code='"&pjt_code&"' and master_no ='"&master_no&"'"
+                    set rs = conn.Execute(sql)
+                    while not rs.eof
+                    %>
+                    <option value="<%=rs("index_no")%>"<%If rs("index_no")=first_index Then%> selected<%End If%>><%=rs("title")%></option>
+                    <%
+                      rs.movenext
+                    wend
+                    rs.close
+                    %>
+                  </select>
+                  <iframe name="ifrm_get_1st_job" src="" width="0" height="0"></iframe>
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  2차:
+                  <select name="job_2nd" style="width:226px;" align="absmiddle">
+                  </select>
+                  <iframe name="ifrm_get_2nd_job" src="/pjt_note/worktable/get_2nd_job.asp?pjt_code=<%=pjt_code%>&master_no=<%=master_no%>&index_no=<%=first_index%>&sel_ind=<%=second_index%>"
+                   width="0" height="0"></iframe>
+                  <input type="hidden" name="third_index" value="">
+                </td>
+              </tr>
+            </table>
+  <%End If%>
+<%Else%>
+            ※ 입력된 업무일정이 없습니다.
+<%End If%>
+          </td>
+        </tr>
+        <tr>
+          <td class="InputTitle">항목폴더선택</td>
+          <td class="InputContents" colspan="3">
+            <select name="folder_index" style="width:252px;">
+              <%
+              sql = " select * from pjt_branch_t where (vsize(branch_code) > 2 or branch_code='D') and branch_code like 'C%' and " &_
+                    " pjt_code='"&pjt_code&"'"
+              set rs = conn.Execute(sql)
+              while not rs.eof
+              %>
+              <option value="<%=rs("branch_code")%>"<%if rs("branch_code")=cstr(folder_index) then%> selected<%end if%>><%=rs("branch_name")%></option>
+              <%
+                rs.movenext
+              wend
+              rs.close
+              %>
+            </select>
+          </td>
+        </tr>
+        <tr>
+          <td class="InputTitle">중요도</td>
+          <td class="InputContents" colspan="3">
+            <label for="priority_0"><input type="radio" name="priority" id="priority_0" value="S">매우중요</label>
+            <label for="priority_1"><input type="radio" name="priority" id="priority_1" value="A">중요</label>
+            <label for="priority_2"><input type="radio" name="priority" id="priority_2" value="B" checked>보통</label>
+          </td>
+        </tr>
+        <tr>
+          <td class="InputTitle">보안등급</td>
+          <td class="InputContents" colspan="3">
+            <label for="security_0"><input type="radio" name="security" id="security_0" value="0">전연구원 공개</label>
+            <label for="security_1"><input type="radio" name="security" id="security_1" value="1">그룹內 공개</label>
+            <label for="security_2"><input type="radio" name="security" id="security_2" value="2" checked>Project內 공개</label>
+            <label for="security_3"><input type="radio" name="security" id="security_3" value="3">게시자,P/L,G/L 공개</label>
+          </td>
+        </tr>
+        <tr>
+          <td class="InputTitle">E-mail 통보 </td>
+          <td class="InputContents" colspan="3">
+            <label for="mail_0"><input type="radio" name="mail" id="mail_0" value="0" checked>메일링 하지 않음</label>
+            <label for="mail_1"><input type="radio" name="mail" id="mail_1" value="1">그룹원 통보</label>
+            <label for="mail_2"><input type="radio" name="mail" id="mail_2" value="2">P/L 이상 통보</label>
+            <label for="mail_3"><input type="radio" name="mail" id="mail_3" value="3">G/L 통보</label>
+          </td>
+        </tr>
+        <tr>
+          <td class="InputTitle">보안만료연한</td>
+          <td class="InputContents" colspan="3">
+            <select name="security_year">
+              <option value="1" selected>1年</option>
+              <%for i=2 to 10%>
+              <option value="<%=i%>"><%=i%>年</option>
+              <%next%>
+            </select>
+            ※ 보안만료연한이 지난후 전연구원 공개
+          </td>
+        </tr>
+        <tr>
+          <td class="InputTitle">화일설명</td>
+          <td class="InputContents" colspan="3">
+            <textarea name="description" cols="105" rows="4" wrap="hard" class="Input" style="width:648px;"><%If Not opt=1 Then%><%=p_description%><%End If%></textarea></td>
+        </tr>
+        <tr>
+          <td class="InputTitle">화 일</td>
+          <td class="InputContents" colspan="3">
+            <input type="file" name="file1" size="91" class="Input"></td>
+        </tr>
+        <tr>
+          <td class="InputTitle">App. Release</td>
+          <td class="InputContents" colspan="3">
+            <input type="text" name="release_no" value="<%If Not opt = 1 Then%><%=p_release_no%><%End If%>" size="106" class="Input" style="width:648px;"></td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+<input type="hidden" name="pc_key" value="">
+<input type="hidden" name="ft_key" value="">
+</form>
+  <tr>
+    <td class="TableSpace"></td>
+  </tr>
+  <tr>
+    <td class="TableTop"></td>
+  </tr>
+  <tr>
+    <td class="TableLine">
+      <table border="0" cellspacing="1" cellpadding="0" width="100%">
+        <tr class="InputTitle">
+          <td width="50%" align="center">
+            제품 분류 선택
+            <script language="JavaScript">
+            <!--
+            function change_sel_pc(val) {
+              var re_url = "input_item/sel_product_class.asp?d_top_product_index=" + val +
+                           "&p_product_index=<%If Not opt=1 Then%><%=p_product_index%><%End If%>";
+              document.all.sel_pc_frm.src = re_url;
+            }
+            //end of JavaScript -->
+            </script>
+            <select name="sel_product_class" align="absmiddle" style="width:200px;"
+             onChange="javascript:change_sel_pc(this.options[this.selectedIndex].value);">
+              <%
+              ' 테이블 내의 내용을 읽어서 순서대로 뿌려준다.
+              ssql = "select product_name,product_index from pdm_product_class_t" & _
+                     " where product_level = '1' order by product_index asc"
+              set rs2 = conn.Execute(ssql)
+              while not rs2.eof
+              %>
+              <option value="<%=rs2("product_index")%>"<%if cstr(rs2("product_index"))="1" Then%> selected<%end if%>><%=rs2("product_name")%></option>
+              <%
+                rs2.movenext
+              wend
+              rs2.close
+              %>
+            </select>
+          </td>
+          <td width="50%" align="center">
+            화일 분류 선택</td>
+        </tr>
+        <tr class="InputContents">
+          <td align="center">
+            <iframe name="sel_pc_frm" src="input_item/sel_product_class.asp?d_top_product_index=1" frameborder="no"
+             width="350" height="230"></iframe>
+           </td>
+           <td align="center">
+            <object id="FileTypeTV" width="350" height="230" style="LEFT: 0px; TOP: 0px;" VIEWASTEXT
+             classid="CLSID:C74190B6-8589-11D1-B16A-00C0F0283628"
+             codebase="/pdm/Component/MSCOMCTL.OCX">
+              <param NAME="_ExtentX" VALUE="7514">
+              <param NAME="_ExtentY" VALUE="5821">
+              <param NAME="_Version" VALUE="327682">
+              <param NAME="HideSelection" VALUE="1">
+              <param NAME="Indentation" VALUE="503">
+              <param NAME="LabelEdit" VALUE="1">
+              <param NAME="LineStyle" VALUE="0">
+              <param NAME="PathSeparator" VALUE="\">
+              <param NAME="Sorted" VALUE="0">
+              <param NAME="Style" VALUE="6">
+              <param NAME="ImageList" VALUE>
+              <param NAME="BorderStyle" VALUE="0">
+              <param NAME="Appearance" VALUE="1">
+              <param NAME="MousePointer" VALUE="0">
+              <param NAME="Enabled" VALUE="1">
+              <param NAME="OLEDragMode" VALUE="0">
+              <param NAME="OLEDropMode" VALUE="0">
+            </object>
+          </td>
+        </tr>
+        <tr class="InputTitle">
+          <td align="center">
+            제품 분류
+            <input name="txtProductClassTV" value="" ReadOnly size="40" class="Input" style="background-Color:transparent;"></td>
+          <td align="center">
+            화일 종류
+            <input name="txtFileTypeTV" value="" ReadOnly size="40" class="Input" style="background-Color:transparent;"></td>
+        </tr>
+        <input type="hidden" name="pc_tree_key" value="<%If Not opt = 1 Then%><%=p_product_index%><%End If%>">
+        <input type="hidden" name="ft_tree_key" value="<%If Not opt = 1 Then%><%=p_file_type_index%><%End If%>">
+      </table>
+    </td>
+  </tr>
+  <tr>
+    <td class="ButtonSpace"></td>
+  </tr>
+  <tr>
+    <td align="center">
+      ※ <font color="purple">제품/화일 분류</font>가 제대로 표시 되지 않으면 <font color="red">'재입력'</font> 버튼을 누르세요.<br>
+      (단, 입력된 내용은 사라집니다.)</td>
+  </tr>
+  <tr>
+    <td class="ButtonSpace"></td>
+  </tr>
+  <tr>
+    <td align="center">
+      <a href="javascript:save_this();"><img src="/images/btn_regist.gif" title="" alt="등록"></a>
+      <a href="javascript:document.location.reload();"><img src="/images/btn_re_input.gif" title="" alt="재입력"></a>
+      <a href="javascript:history.back();"><img src="/images/btn_return.gif" title="" alt="복귀"></a>
+    </td>
+  </tr>
+</table>
+
+<!--#include virtual="/include/body_copyright.asp"-->
+
+</body>
+</html>
+<%
+set rs = nothing
+conn.close
+set conn = nothing
+Set up = nothing
+%>

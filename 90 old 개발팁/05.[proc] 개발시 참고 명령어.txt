@@ -1,0 +1,104 @@
+1. memchr(iptInp->sStateType, SPACE, 1)
+   -> 메모리의 sStateType위치에서 1byte만큼 SPACE를 찾지못하면 NULL을 리턴
+
+2. memset (메모리초기화)
+#include <string.h>
+void *memset(void *s, int c, size_t n);
+
+[사용예]
+memset(&iptKe10006r , 0x00, sizeof(STKE10006R)); 
+
+3. memcpy (메모리복사)
+#include <string.h>
+void *memcpy(void *dest, const void *src, size_t n);
+
+[사용예]
+memcpy(&ivCampId, iptInp->sCampId, sizeof(ivCampId)-1);     
+
+4. 0x00(null), 0x20(SPACE)
+
+5. 전처리기
+DEBUG가 define으로 정의되어 있으면 SQLERRPRN을 수행해라.
+   #ifdef DEBUG
+     SQLERRPRN;
+   #endif
+
+6. extern : 외부변수
+   -> 전역변수로 사용할 때 사용
+
+7. static : 정적변수(지역 or 전역)
+   -> 값이 지워지지 않고, 외부에서 정적전역변수는 접근 불가
+
+#include <stdio.h>
+void func() {
+   int a=0;
+   a=a+1;
+   printf("%d\n",a);
+}
+void main() {
+   func();
+   func();
+   func();
+}
+1,1,1
+
+#include <stdio.h>
+void func() {
+   static int a=0;   /* 정적지역변수*/
+   a=a+1;
+   printf("%d\n",a);
+}
+void main() {
+   func();
+   func();
+   func();
+}
+1,2,3
+
+
+--------------------------------------------------------------------------
+[포인터]
+
+1. 정의
+    - 변수 p_rate에 변수 rate의 주소값을 저장한다.
+
+2. 선언
+    - char      *p_rate; (char형에 대한 포인터)
+
+3. 초기화
+    - p_rate = &rate; (주소연산자 사용)
+
+4. 사용방법
+    - 포인터 변수앞에 간접연산자(*)를 붙이면 포인터가 지적하는 변수를 가리키게 된다. (*p_rate는 변수 rate를 뜻한다.)
+
+5. 사용예
+    - printf("%d", rate); <동일> printf("%d", *p_rate);
+
+6. &, *
+    - 주소연산자(&)는 변수의 앞에 사용하고 변수의 주소값을 구하고, 간접연산자(*)는 포인터의 이름 앞에 사용되고 관련된 변수의 값을 구한다.
+
+SQLCODE 
+fbcommand.h에 #define SQLCODE sqlca.sqlcode; 로 정의되어 있다.
+sqlca.sqlcode의 내용은 개발서버에서 $oerr ora [sqlcode]로 확인할 수 있다
+
+[CURSOR 사용]
+여러 개의 ROW를 query할 경우 사용한다.
+CURSOR의 사용은 DECALRE, OPEN, FETCH, CLOSE의 4개의 명령으로 사용 가능하며 처음에 DECALRE문으로 CURSOR를 선언한다. 
+  EXEC SQL DECLARE emp_cursor CURSOR FOR
+  SELECT ename, empno, sal
+  FROM emp
+  WHERE deptno = :dept_number;
+실제적으로 CURSOR를 실행하는 부분은 OPEN이다.
+  EXEC SQL OPEN emp_cursor;
+커서는 OPEN시점에서 실제적으로 QUERY를 수행하여 데이타를 추출한다.
+OPEN이 되었다면 데이타는 FETCH문으로 어플리케이션 프로그램으로 가져온다.
+  EXEC SQL FETCH emp_cursor
+  INTO :emp_name, :emp_number, :salary;
+이 FETCH문장은 더 이상 가져올 데이타가 없을 때까지 실행되어야 하니까, LOOP안에 위치하게 된다..
+
+- scanf("%d", &x);
+   숫자데이터의 입력, 키보드에서 정수형을 읽어 정수형 변수 x에 할당한다.
+- puts(), gets()
+   puts("입력하세요 : ");
+  gets(input);
+   printf("입력값: %s\n", input); 

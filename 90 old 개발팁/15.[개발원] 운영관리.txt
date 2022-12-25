@@ -1,0 +1,117 @@
+ ○ 통합메세지시스템(UMS)(58.120.225.246)
+   - UMS URL : http://ums.kordi.or.kr:8088/umskordi.php
+   - DB 관리URL : http://ums.kordi.or.kr:8088/myadmin/
+   - DB 계정 : umsbiz/(shift+321)+dsa
+	INSERT INTO members
+		(Id, Pass, Name, Email, Tel, Fax, Han, Level, Member_Type, MenuCode, GrpID, RegUser, RegDate, LimitPoint, AgreeChk, AgreeDate)
+	VALUES
+		("systembu", "system", "부울경지역사업본부", "", "", "", "", 50, 2, "11011110", 9001, "system", now(), 50000, "0", now());
+-------------------------------------------------------------------------------
+○ groupware start
+	1) groupware start
+		a) 그룹웨어 계정으로 로그인후 su -handy
+		b) 결재서버 start
+			- /handy/jhomes/bin/ 폴더에서 ./phoenix.sh start
+		c) RM Engine start
+			- /handy/hip/bin/Unix 폴더에서 순서에 구애받지 않고 아래 쉘을 실행한다.
+			- ./hi.start
+			- ./notify.start
+		d) MQ Server start
+			- /handy/jhoms-mq/bin/ 폴더에서 ./jhomsmq.sh start
+	2) was(tomcat) start
+		a) 그룹웨어 계정으로 로그인후 su -handy
+		b) /handy/tomcat/bin 폴더에서 ./startup.sh 를 실행
+	3) OneShot start
+		a) 그룹웨어 계정으로 로그인후 su -handy
+		b) 하나의 셀을 실행하여 1), 2)를 한번에 start한다.
+		c) /handy/all.start 를 실행
+-------------------------------------------------------------------------------
+○ kordi oracle 운영
+	1) oracle 서버 시작(STARTUP)
+		a) #su -oracle (또는 oracle user로 로그인)
+		b) #sqlplus "/as sysdba"
+		c) sqlplus > start
+		d) sqlplus > quit
+		e) $lsnrctl start --> oracle 리스너 시작
+	2) oracle 서버 종료
+		a) #su -oracle (또는 oracle user로 로그인)
+		b) #sqlplus "/as sysdba"
+		c) sqlplus > shutdown immediate
+		d) sqlplus > quit
+		e) $lsnrctl stop --> oracle 리스너 종료
+-------------------------------------------------------------------------------
+○ DB 덤프파일관리
+  - background_dump_dest     = /oracle/admin/ORCL/bdump	(삭제가능, alert_ORCL.log, orcl_j001_0000000.trc, orcl_lgwr_000000.trc 제외) 
+  - user_dump_dest           = /oracle/admin/ORCL/udump	(삭제가능, 오라클서버에서 trace 파일은 monitor를 위해 사용될 뿐입니다. 삭제하셔도 됩니다, orcl_ora_0000000.trc)
+  - core_dump_dest           = /oracle/admin/ORCL/cdump
+  - audit_file_dest          = /oracle/admin/ORCL/adump (삭제가능, 언제 누가 뭘 했는지에 대한 기록)
+-------------------------------------------------------------------------------
+7. 기타
+오라클 인스턴트 클라이언트 설치방법 (Windows OS 기준)
+
+(1) 오라클 홈페이지에 접속하여 프로그램을 다운로드 받습니다.
+     http://www.oracle.com/technology/software/tech/oci/instantclient/index.html
+
+(2) 다운로드 받은 파일의 압축을 해제합니다.
+     (이하 압축 해제경로를 C:\instantclient_10_2 이라 가정함)
+
+(3) 시스템 환경변수에 다음의 변수들을 추가합니다.
+     PATH = %PATH%;C:\instantclient_10_2
+     ORACLE_HOME = C:\instantclient_10_2
+     TNS_ADMIN = C:\instantclient_10_2
+     NLS_LANG = KOREAN_KOREA.KO16MSWIN949
+
+(4) C:\instantclient_10_2 경로에 tnsnames.ora 파일을 생성합니다.
+
+
+		1) 웹스피어 
+			- http://www.kordi.or.kr:9060/ibm/console/ (wrd)
+			- application server -> web server
+
+-------------------------------------------------------------------------------
+○ kordi WAS, Webserver 운영
+	- ip : 58.120.225.242 (root / 개발원)
+	- 호스트명 : kordiweb
+
+	1) was stop
+		a) cd /was/AppSvr/profiles/Dmgr01/bin/stopManager.sh -user admin -password roqkfdnjs
+		a) cd /was/AppSvr/profiles/AppSrv01/bin/stopNode.sh -user admin -password roqkfdnjs
+		a) cd /was/AppSvr/profiles/AppSrv01/bin/stopServer.sh server1 -user admin -password roqkfdnjs
+		a) cd /IBMIHS/bin/apachectl stop
+
+	2) was 구동 프로세스 확인절차
+		a) deployment manager 프로세스 확인 (ps -ef | grep dmgr)
+		c) node agent 프로세스 확인 (ps -ef | grep nodeagent)
+		b) application server 프로세스 확인 (ps -ef | grep server1)
+		d) apache server 프로세스 확인 (ps -ef | grep httpd)
+
+	3) was start
+		a) /was/AppSvr/profiles/Dmgr01/bin/startManager.sh -user admin -password roqkfdnjs
+		b) /was/AppSvr/profiles/AppSrv01/bin/startNode.sh -user admin -password roqkfdnjs
+		c) /was/AppSvr/profiles/AppSrv01/bin/startServer.sh server1 -user admin -password roqkfdnjs
+		d) /IBMIHS/bin/apachectl start
+		x) /was/AppSvr/profiles/AppSrv01/bin/startServer.sh server4 -user admin -password roqkfdnjs
+
+	4) was 강제종료
+		a) kill -9 프로세스번호(-a)
+
+	5) log
+		a) /was/AppSvr/profiles/Dmgr01/logs/dmgr/startServer.log
+		b) /was/AppSvr/profiles/AppSrv01/logs/nodeagent/startServer.log
+		c) /was/AppSvr/profiles/AppSrv01/logs/server1/startServer.log
+
+	6) /was/AppSvr/profiles/AppSrv01/config/cells/kordiwebCell01/applications/sjpEAR.ear/deployments/sjpEAR/sjp.war/WEB-INF/
+		 /was/AppSvr/profiles/AppSrv01/config/cells/kordiwebCell01/applications/kordiEAR.ear/deployments/kordiEAR/kordi.war/WEB-INF/ 
+		 /was/AppSvr/profiles/AppSrv01/config/cells/kordiwebCell01/applications/sjph_testEAR.ear/deployments/sjph_testEAR/sjph_test.war/WEB-INF/ 
+  	 에 web.xml을 올린다. 
+
+	7) http://kordi.or.kr:9060/ibm/console/ 으로 들어가서, 로그인 한 다음, 시스템관리 > 노드 화면에서 kordiwebNode01을 동기화시킨다. 
+
+	8) 콘솔에서 응용프로그램 > 새 응용프로그램 설치 화면에서 sjpEAR를 중지시킨 후 다시 시작한다.
+-------------------------------------------------------------------------------
+○ WAS 덤프파일관리
+	- tail -f SystemOut
+	- ps -ef|grep server4
+	- ps -ef|grep java (프로세스 일괄조회)
+	- profile/AppSvr01/덤프파일
+	- IBMHS/logs/web_access_log 관리필요

@@ -1,0 +1,124 @@
+브라우저에선 activex컨트롤러가 우선 적용되므로 특별히 곰플레이어 activex 스크립트가 적용되지 않는 한 곰플레이어로 나올수가 없습니다.
+
+ 
+
+브라우저에선 확장자 보다 어떤 프로그램으로 재생되어야 하는가 명령을 하는데 그 명령에 의해 재생됩니다.
+
+ 
+
+만약 곰플레이어 명령 스크립트가 적용되면 곰플레이어로 나오지만 대부분은 윈도우 미디어 플레이어 테그가 적용되므로 윈도우 미디어 플레이어가 나오는 것입니다.
+
+ 
+
+참고로 곰 플레이어 스크립트가 적용될려면....
+
+제로보드 홈피에서 퍼왔습니다.
+
+ 
+
+<HTML>
+
+<script src="http://app.ipop.co.kr/ipop/ipopxinstall.js"></script>
+
+<script language=javascript>
+function RunGom(){ 
+        ipopxInstall();
+
+        if(ipopx.IsInstall){
+                // 기본 정보 세팅
+                ipopx.SetVersionURL("http://app.ipop.co.kr/gom/GrVersion.ini");
+                ipopx.SetClassName("GomPlayer1.x");
+                ipopx.SetProgramID("GOMPLAYER");
+
+                // 스킨 설정
+                ipopx.GOM_SetOemSkin("http://app.ipop.co.kr/gom/skins/default.gps", 0);
+                // 곰 실행
+                ipopx.Run("/nosetup", "", "");
+                // 곰의 목록 삭제
+                ipopx.SendCommand("/clearlist");
+                // 재생할 파일 목록에 추가
+                var param = "/add \"http://동영상이 있는 주소1부\"/add \"http://동영상이 있는주소2부.avi\"";
+                //alert(param);
+
+                ipopx.SendCommand(param);
+                // 재생 시작
+                ipopx.SendCommand("/playfirst");
+                
+                self.close();
+        }
+        else
+        {
+                var param = "RunGom()";
+                setTimeout(param, 100);                                        // 설치할때까지 재시도.
+        }
+}
+
+function new_window(name, url, left, top, width, height, toolbar, menubar, statusbar, scrollbar, resizable){
+        toolbar_str = toolbar ? 'yes' : 'no';
+        menubar_str = menubar ? 'yes' : 'no';
+        statusbar_str = statusbar ? 'yes' : 'no';
+        scrollbar_str = scrollbar ? 'yes' : 'no';
+        resizable_str = resizable ? 'yes' : 'no';
+        window.open(url, name, 'left='+left+',top='+top+',width='+width+',height='+height+',toolbar='+toolbar_str+',menubar='+menubar_str+',status='+statusbar_str+',scrollbars='+scrollbar_str+',resizable='+resizable_str);
+}
+</script>
+
+
+<body leftmargin="0" topmargin="0" marginwidth="0" marginheight="0" onLoad=".javascriptRunGom();" bgcolor="white" text="black" link="blue" vlink="purple" alink="red">
+<script language="javascript">
+var myVer = navigator.appVersion;
+
+if(myVer.indexOf("Windows NT 5.1; SV1") == -1){
+        document.write("<object classid='clsid:D27CDB6E-AE6D-11cf-96B8-444553540000' codebase='http://download.macromedia.com/pub/shockwave/cabs/flash/swflash.cab#version=5,0,0,0' width='400' height='300'>");
+        document.write("");
+        document.write("");
+        document.write("<object src='http://cinezine.maxmp3.co.kr/action/loading.swf' quality=high pluginspage='http://www.macromedia.com/shockwave/download/index.cgi?P1_Prod_Version=ShockwaveFlash' type='application/x-shockwave-flash' width='400' height='300'></object>");
+} else {
+        self.resizeTo(580,500);
+        document.write("");
+        document.write(" ");
+        document.write(" ");
+        document.write("고객님은 WindowsXP SP2 로 인하여 ActiveX 컨트롤의 설치가 차단되었습니다.
+");
+        document.write("영화를 감상하시려면 아래 그림처럼 위의 설명을 클릭해서 [ActiveX 컨트롤 설치]를 꼭 눌러주세요.");
+        document.write("
+
+");
+        document.write("그러면 아래 그림처럼 보안경고 창이 나타납니다. 여기서 [설치] 버튼을 클릭하여 곰플레이어를 설치하도록 합니다.");
+        document.write("이렇게 하셔야만 상영관에서 영화관람이 정상적으로 이루어집니다.");
+        document.write("
+
+");
+        document.write(" 
+");
+}
+</script>
+--------------------------------- 
+// 동영상 전체화면으로 보기
+function Full(){		
+	document.WMPlay.DisplaySize=3;
+}
+
+
+			<textarea id=txt1 style="display:none;" rows="0" cols="0"> 
+			<OBJECT ID="MediaPlayer1" name="WMPlay" width=339 height="320"
+				classid="CLSID:22D6F312-B0F6-11D0-94AB-0080C74C7E95" 
+				codebase="http://activex.microsoft.com/activex/controls/MediaPlayer1/en/nsmp2inf.cab#Version=6,4,5,715" 
+				standby="Loading Microsoft?Windows?Media Player components..." 
+				type="application/x-oleobject">
+			<param name="FileName"  value='http://Pvod-Det.webcast.go.kr/VOD_Det/2007/bon/DCM001010172670301/DCM0010101726703017.asf'>
+			<param name="AnimationAtStart" value="true">
+			<param name="AutoRewind" value='1'>
+			<param name="AutoSize" value="1">
+			<param name="AutoStart" value="1">
+			<param name="ClickToPlay" value="0">
+			<param name="EnableContextMenu" value="0">
+			<param name="ShowStatusBar" value="1">
+			<param name="ShowControls" value="1">				
+			<param name="TransparentAtStart" value="false">
+			
+			</OBJECT>
+			
+			</textarea>
+
+
