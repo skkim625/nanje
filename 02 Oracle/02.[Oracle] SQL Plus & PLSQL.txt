@@ -1,0 +1,205 @@
+0. oracle 명령어
+	- ipcs -m : 현재 db가 사용하는 운영체제의 메모리 확인
+
+0_1. 설치
+
+
+1. sqlplus & plsql
+ 1) 연결하고 끝내기
+  - SQL> create user <user> identified by <psw> : 사용자생성
+  - SQL> grant connect, resource to <user> : 권한부여
+  - SQL> sqlplus id/pwd
+  - SQL> CONNECT id/pwd@xxx.com : 연결하기
+  - SQL> exit
+
+ 2) sql 실행하기
+  - select * from xxx;  (/는 가장 최근에 입력된 문장을 실행하라)
+
+ 3) hello 출력하기
+  SET SERVEROUTPUT ON
+  BEGIN
+   DBMS_OUTPUT.PUT_LINE('Hello');
+  END;
+  /
+
+ 4) sql file실행하기
+  - SQL> @file명.sql == START file명.sql
+  - SQL> !vi 파일명 : sql 문을 사용하려면 파일명.sql 로 파 일 이름을 정한다.
+  - SQL> start tel_list.sql : tel_list.sql파일 실행
+
+ 5) file에 sql 결과값 저장하기
+  - SPOOL 저장file명.txt
+  - @sqlfile명
+  - SPOOL OFF
+
+ 6) PL/SQL 프로그램 생성
+  CREATE FUNCTION wordcnt(str IN VARCHAR2)
+  RETURN PLS_INTEGER
+  AS
+   로컬변수선언
+  BEGIN
+   알고리즘 처리
+   DECLARE
+    a NUMBER;
+    b CHAR(50);
+    c VARCHAR2(30) := '';
+    d DATE;
+   BEGIN
+    IF condition THEN ...
+    ELSEIF ...
+    ELSE ...
+    END IF;
+   END;
+  EXCEPTION
+   예외처리
+  END;
+  /
+
+ 7) 커서와 테이블로 앵커링
+  DECLARE
+   CURSOR 커서명 IS
+    SELECT author, title FROM book
+    WHERE isbn = 'xxx'
+   l_book 커서명%ROWTYPE;
+  BEGIN
+   OPEN 커서명;
+   FETCH 커서명 INTO l_book;
+   process_book(l_book);
+  END;
+ 
+ 12) FORALL문에서 대량 DML 처리
+  CREATE OR REPLACE PROCEDURE order_books(
+   isbn_in IN name_varray
+   new_count_in IN number_varray)
+  IS
+  BEGIN
+   FORALL indx IN isbn_in.FIRST .. isbn_in.LAST
+   UPDATE books SET page_cnt = new_count_in(indx) WHERE isbn=isbn_in(indx);
+  END;
+
+ 13) DML문에 대한 암시적 SQL CURSOR 속성
+  - SQL%FOUND, SQL%NOTFOUND, SQL%ROWCOUNT
+
+ 14) plsql 사용예
+ EXEC SQL DECLARE newhumandahn CURSOR FOR /* newhumandahn 커서 정의 */
+ SELECT kwtit.tit, titds.ds, kwtit.fname  /* join 을 이용한 검색 */
+ FROM kwtit, titds
+ WHERE kwtit.kw like :whkw AND kwtit.tit = titds.tit;
+ EXEC SQL OPEN newhumandahn;   /* 커서를 연다 */
+ EXEC SQL FETCH newhumandahn INTO :tit, :ds, :fname; /* 원하는 자료를 */
+  /* 취해서 각각 */
+  /* tit, ds, fname */
+  /* 에 저장 */
+ /* 결과의 출력, HTML 로 */
+ printf(“<br><center><h2> RESULT </h2></center><br>”);
+ printf(“<div align=center><tablr border=0”);
+ while(sqlca.sqlcode==0) /* 값이 더 이상 없을 때 까지 */
+ {
+  printf(“<tr><td width=600 height=27><p>”);
+  printf(“<a href=＼”http://book.hanmunhwa.co.kr/%s＼”>%s(1999/03)</a>”,fname,tit);
+
+  printf(“</td></tr><tr><td width=600 height=25><p>”);
+  printf(“%s<br><br></td></tr>”,ds);
+
+  EXEC SQL FETCH newhumandahn INTO :tit, :ds, :fname; /* 계속 */
+  /* 값을 */
+  /* 구함 */
+ }
+ printf(“</table></div>”);
+ EXEC SQL CLOSE newhumandahn;    /* newhumandahn 커서 닫음 */
+ exit(EXIT_SUCCESS);
+
+
+SQL> help index
+
+Enter Help [topic] for help.
+
+@ COPY PAUSE SHUTDOWN
+@@ DEFINE PRINT SPOOL
+/ DEL PROMPT SQLPLUS
+ACCEPT DESCRIBE QUIT START
+APPEND DISCONNECT RECOVER STARTUP
+ARCHIVE LOG EDIT REMARK STORE
+ATTRIBUTE EXECUTE REPFOOTER TIMING
+BREAK EXIT REPHEADER TTITLE
+BTITLE GET RESERVED WORDS (SQL) UNDEFINE
+CHANGE HELP RESERVED WORDS (PL/SQL) VARIABLE
+CLEAR HOST RUN WHENEVER OSERROR
+COLUMN INPUT SAVE WHENEVER SQLERROR
+COMPUTE LIST SET
+CONNECT PASSWORD SHOW
+
+SQL> help set
+
+SET
+---
+
+Sets a system variable to alter the SQL*Plus environment settings
+for your current session, for example:
+- display width for data
+- turn on HTML formatting
+- enabling or disabling printing of column headings
+- number of lines per page
+
+In iSQL*Plus, you can also use the System Variables screen to set
+system variables.
+
+SET system_variable value
+
+where system_variable and value represent one of the following clauses:
+
+APPI[NFO]{OFF|ON|text} *NEWP[AGE] {1|n|NONE}
+ARRAY[SIZE] {15|n} NULL text
+AUTO[COMMIT] {OFF|ON|IMM[EDIATE]|n} NUMF[ORMAT] format
+AUTOP[RINT] {OFF|ON} NUM[WIDTH] {10|n}
+AUTORECOVERY {ON|OFF} PAGES[IZE] {24|n}
+AUTOT[RACE] {OFF|ON|TRACE[ONLY]} *PAU[SE] {OFF|ON|text}
+[EXP[LAIN]] [STAT[ISTICS]] RECSEP {WR[APPED] |
+BLO[CKTERMINATOR] {.|c} EA[CH]|OFF}
+CMDS[EP] {;|c|OFF|ON} RECSEPCHAR {_|c}
+COLSEP {_|text} SERVEROUT[PUT] {OFF|ON}
+COM[PATIBILITY] {V7|V8|NATIVE} [SIZE n] [FOR[MAT]
+CON[CAT] {.|c|OFF|ON} {WRA[PPED] |
+COPYC[OMMIT] {0|n} WOR[D_WRAPPED] |
+COPYTYPECHECK {OFF|ON} TRU[NCATED]}]
+DEF[INE] {&|c|OFF|ON} *SHIFT[INOUT] {VIS[IBLE] |
+DESCRIBE [DEPTH {1|n|ALL}] INV[ISIBLE]}
+[LINENUM {ON|OFF}] [INDENT {ON|OFF}] *SHOW[MODE] {OFF|ON}
+ECHO {OFF|ON} *SQLBL[ANKLINES] {ON|OFF}
+*EDITF[ILE] file_name[.ext] SQLC[ASE] {MIX[ED] |
+EMB[EDDED] {OFF|ON} LO[WER] | UP[PER]}
+ESC[APE] {|c|OFF|ON} *SQLCO[NTINUE] {> | text}
+FEED[BACK] {6|n|OFF|ON} *SQLN[UMBER] {OFF|ON}
+FLAGGER {OFF|ENTRY|INTERMED[IATE]|FULL} SQLPLUSCOMPAT[IBILITY] {x.y[.z]}
+*FLU[SH] {OFF|ON} *SQLPRE[FIX] {#|c}
+HEA[DING] {OFF|ON} *SQLP[ROMPT] {SQL>|text}
+HEADS[EP] {||c|OFF|ON} SQLT[ERMINATOR]
+INSTANCE [instance_path|LOCAL] {;|c|OFF|ON}
+LIN[ESIZE] {80|n} ({150|n} iSQL*Plus) *SUF[FIX] {SQL|text}
+LOBOF[FSET] {n|1} TAB {OFF|ON}
+LOGSOURCE [pathname] TERM[OUT] {OFF|ON}
+LONG {80|n} TI[ME] {OFF|ON}
+LONGC[HUNKSIZE] {80|n} TIMI[NG] {OFF|ON}
+MARK[UP] HTML [ON|OFF] TRIM[OUT] {OFF|ON}
+[HEAD text] [BODY text] [TABLE text] TRIMS[POOL] {ON|OFF}
+[ENTMAP {ON|OFF}] UND[ERLINE] {-|c|ON|OFF}
+[SPOOL {ON|OFF}] VER[IFY] {OFF|ON}
+[PRE[FORMAT] {ON|OFF}] WRA[P] {OFF|ON}
+
+An asterisk (*) indicates the SET option is not supported in iSQL*Plus.
+
+SQL> set pagesize 30 // 결과 출력시 행의수 조절
+SQL> set timing on // 실행 시간 출력 기능
+
+SQL> show all
+
+현재 환경설정된 변수값을 볼수 있다.
+
+appinfo is OFF and set to "SQL*Plus"
+arraysize 15
+autocommit OFF
+autoprint OFF
+autorecovery OFF
+autotrace OFF
+blockterminator "." (hex 2e)
+~~~

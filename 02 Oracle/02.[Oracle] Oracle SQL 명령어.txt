@@ -1,0 +1,231 @@
+0_1) 자주 사용하는 함수
+  - 명시적 자료형 변환
+   CAST, CONVERT, TO_CHAR, TO_DATE, TO_NUMBER, TO_TIMESTAMP
+  - 문자열 함수
+   ASCII(CHR), CONCAT, INSTR, LOWER(UPPER), TRIM(LTRIM, RTRIM), REPLACE, SUBSTR
+  - 내장 수치 함수
+   TRUNC(a,[b]), ROUND, MOD
+  - 내장 날짜 함수
+   ADD_MONTHS, LAST_DAY, MONTHS_BETWEEN, SYSDATE(SYSTIMESTAMP)
+
+0_2) CAST 함수
+  SELECT employee_id, cast(hire_date AS VARCHAR2(30)) FROM employee
+
+0_3) 날짜 사용
+  DECLARE
+   todays CONSTANT DATE := SYSDATE;
+   hire_date DATE DEFAULT SYSDATE;
+   end_of_year DATE := TO_DATE(SYSDATE,'MM/DD/YYYY');
+
+  - String형을 날짜형으로 변환
+  TO_DATE(REG_DATE,'YYYY-MM-DD HH24:MI:SS')
+
+0_4) INTERVAL 함수
+  DECLARE
+   strInterval INTERVAL YEAR TO MONTH;
+  BEGIN
+   strInterval := (end_date - start_date) YEAR TO MONTH;
+  END;
+
+0_5) 날짜변경 함수
+	한달전 where reg_date >= add_months(sysdate, -1) 
+	하루전 where reg_date >= sysdate-1 
+	한시간전 where reg_date >= sysdate-1/24 
+
+
+	mysql 
+
+	한달전 where reg_date >= date_add(now(), interval -1 month) 
+	하루전 where reg_date >= date_add(now(), interval -1 day) 
+	한시간전 where reg_date >= date_add(now(), interval -1 hour) 
+
+
+1. 날짜변환
+          TO_CHAR(date필드, 'YYYYMMDD')
+
+2. CASE문
+          DECODE(필드, '1', 'O', 'X') PRETEST_YN
+
+ case when nvl(a.subsvc_cd, 'x') = 'x' then b.choice_grp -- db에 없는것
+      when choice_grp = '0' then '100'     -- db에 있고, 체크박스인 것
+   else '101'                -- db에 있고, select인 것  
+   end choice_grp
+
+3. 월수 더하기
+        - ADD_MONTHS(SYSDATE, 월수)
+
+ - SELECT MONTHS_BETWEEN(TO_DATE('20000901'), TO_DATE('20000601'))  "Date" FROM dual ; 
+
+4. null 을 0으로 변환
+          NVL(필드,0)
+
+4. 계층형 데이터 가져오기
+ - 예1)
+ Select
+  T1.국기호, T1.관내명
+ FROM        
+  관서정보 T1
+ START WITH        T1.국기호 = :총괄국코드
+ CONNECT BY PRIOR  T1.국기호 = T1.감독국
+ - 예1)
+ ORDER SIBLINGS BY COMM_CD
+
+5. 기관데이터가 생성날짜별로 있을경우
+        SELECT
+                   B.기관명               
+        INTO    :iptKe10009r
+        FROM    CAMP_INFO   A,
+                (   SELECT  기관코드, 기관명
+                    FROM    BCGWANCT
+                    WHERE   기관코드      LIKE   :입력기관코드 || '%'
+                    AND     생성날짜 = (    SELECT  MAX(생성날짜)
+                                            FROM    BCGWANCT
+                                            WHERE   기관코드 LIKE :입력기관코드 || '%' )
+                )   B
+        WHERE   A.기관코드 = B.기관코드
+
+6. 오라클 토드 한글깨질때
+        - 해당 unix로 로그인후 .profile을 vi로 열어 NLS_LANG 값으로 레지스트리를 바꿔준다.
+        - 레지스트리의 ORACLE>NLS_LANG의 값을 AMERICAN_AMERICA.US7ASCII로 수정한다. 
+
+7. 길이 체크
+ - SELECT LENGTH('ABCD'), VSIZE('ABCD'), LENGTH('대한민국'), VSIZE('대한민국') FROM DUAL;
+
+8. 전체 컬럼중에서 찾기
+ select * from all_col_comments where comments like '%관리번호%'  (user_col_comments)
+ select * from user_tab_columns 
+ select * from all_tab_columns  
+ 
+9. unix에서 sqlplus를 실행시켜 a.sql파일을 실행시키기
+ 1. vi a.sql에서 sql을 작성후 맨 밑줄에 /을 붙인다.
+ 2. sqlplus 유저/패스워드로 로그인한다.
+ 3. @a로 실행시킨다.  
+ 
+10. sequence 사용
+ <생성>
+ CREATE SEQUENCE sequence_name
+ [ INCREMENT BY n ]
+ [ START WITH n ]
+ [ { MAXVALUE n | NOMAXVALUE } ]
+ [ { CYCLE | NOCYCLE } ]
+ [ { CACHE n | NOCACHE } ]
+ [ { ORDER | NOORDER } ]
+
+
+ SQL> CREATE SEQUENCE s_dept_id
+ 2 MAXVALUE 9999999
+ 3 INCREMENT BY 1
+ 4 START WITH 51
+ 5 NOCACHE
+ 6 NOORDER
+ 7 NOCYCLE;
+
+
+ <사용 예제>
+
+ SQL> INSERT INTO s_dept
+ 2 VALUES (s_dept_id.NEXTVAL, 'Finance', 3);
+
+
+ sequence_name.NEXTVAL : 현재값 다음 값을 되돌려주고 자신은 다음 값으로 된다.
+ sequence_name.CURRVAL : 시퀀스의 현재값을 되돌려 준다.
+
+ SQL> INSERT INTO s_dept
+ 2 VALUES (s_dept_id.NEXTVAL, 'Finance', 4);
+  
+11. 테이블 레이아웃 만들기
+ -- 테이블 레이아웃
+ select 
+    a.table_name, 
+    (select comments from user_tab_comments 
+    where table_name = a.table_name 
+    --and comments like '%관리번호%'
+    ) AS tab_comments, 
+    (select comments from user_col_comments 
+    where table_name = a.table_name 
+    and column_name = a.column_name 
+    --and comments like '%관리번호%'
+    ) AS col_comments, 
+    a.data_type, 
+    a.data_length, 
+    a.data_default,
+    a.column_id
+ from user_tab_columns a
+ where
+   a.table_name = 'PLAN_MANMASTER_T'
+ order by a.column_id
+
+12. index 생성하기
+ -- PK생성
+ CREATE UNIQUE INDEX TB_PJT_DATA_PK ON TB_PJT_DATA
+ (DATA_SEQ_NO)
+ LOGGING
+ TABLESPACE WEB
+ PCTFREE    10
+ INITRANS   2
+ MAXTRANS   255
+ STORAGE    (
+       INITIAL          64K
+       MINEXTENTS       1
+       MAXEXTENTS       2147483645
+       PCTINCREASE      0
+       BUFFER_POOL      DEFAULT
+       )
+ NOPARALLEL;
+
+ -- user index 생성
+ CREATE INDEX PJT_DATA_IDX01 ON TB_PJT_DATA
+ (PJT_CD, DGR, ACTIVITY_SNO)
+ LOGGING
+ TABLESPACE WEB
+ PCTFREE    10
+ INITRANS   2
+ MAXTRANS   255
+ STORAGE    (
+       INITIAL          64K
+       MINEXTENTS       1
+       MAXEXTENTS       2147483645
+       PCTINCREASE      0
+       BUFFER_POOL      DEFAULT
+       )
+ NOPARALLEL;
+
+13.merge
+MERGE INTO table_name alias                               --테이블 명만 올수 있음(셀렉트 쿼리 No)
+          USING (table|view|subquery) alias                --일반적으로 쓰는 쿼리 Ok
+          ON (join condition)                                        --where 절이라고 생각하면됨(조건에 서브 OK)
+          WHEN MATCHED THEN                              --데이터 중복건이 있는경우 Update
+                       UPDATE SET col1 = val1[, col2 = val2…] 
+          WHEN NOT MATCHED THEN                      -- 중복건이 없는 경우 처리 Insert
+                       INSERT (컬럼리스트) VALUES (값들....); 
+
+ex)
+
+    MERGE INTO TC_CUSTAGENT A
+   USING (SELECT BUSI_CODE, CUST_CODE, CHPE_NAME, CUST_PHNB, CUST_FANU
+                FROM TB_ESTMAST
+                WHERE BUSI_CODE = '___parameter___'
+
+                     AND CUST_CODE = '____parameter___') B
+    ON (A.BUSI_CODE = B.BUSI_CODE
+           AND A.AFON_COMP = B.CUST_CODE
+           AND A.SEQU_NUMB = (SELECT MAX(SEQU_NUMB)
+                                            FROM TC_CUSTAGENT
+                                            WHERE BUSI_CODE = A.BUSI_CODE
+                                                  AND AFON_COMP = A.AFON_COMP))
+   WHEN MATCHED THEN
+         UPDATE
+         SET  A.CHPE_NAME = B.CHPE_NAME
+                ,A.CABL_PHNB = B.CUST_PHNB
+                ,A.FAXM_NUMB = B.CUST_FANU
+    WHEN NOT MATCHED THEN
+         INSERT (  A.AFON_COMP
+                       ,A.CHPE_NAME 
+                       ,A.CABL_PHNB 
+                       ,A.FAXM_NUMB      
+                     ) 
+         VALUES (  B.CUST_CODE
+                        ,B.CHPE_NAME       
+                        ,B.CUST_PHNB 
+                        ,B.CUST_FANU     
+                      );
