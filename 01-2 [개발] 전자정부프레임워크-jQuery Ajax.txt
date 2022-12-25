@@ -1,0 +1,31 @@
+[jQuery ajax 함수]
+ - type
+ - url
+ - data
+ - contentType
+ - statusCode
+ - beforeSend
+ - error
+ - success
+ - crossDomain
+ 
+[jqXHR의 callback함수]
+ - XHR : XMLHttpRequest
+ - jqXHR.done : 성공시 호출되는 콜백함수
+ - jqXHR.fail : 실패시 호출되는 콜백함수
+ - jqXHR.always : 항상 호출되는 콜백함수
+ 
+ - callback의 실행순서
+ - 성공 : success > complete > done > always
+ - 실패 : error > complete > fail > always
+ 
+[validation-Jakarta Commons Validator]
+ - spring-modules-validation.jar
+ - DefaultValidatorFactory, DefaultBeanValidator 설정 필요
+ - validator-rules.xml 설정 필요
+ - validator.xml 설정
+ 
+ - Server-Side Validation
+ 
+ - Client-Side Validation
+ - validator:javascript formName="employee".../>
