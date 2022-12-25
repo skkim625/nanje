@@ -1,0 +1,79 @@
+[이클립스 project property]	
+					
+# Project > Properties ( 프로젝트 속성정보 )						
+- 리소스 인코딩 기본 정보						
+	Resource 					
+	인코드 정보가 MS949로 되어있음.					
+ - 자바 jar참조 셋팅						
+	Java Build Path > tab : source 					
+	source 폴더들 ( 이거 설정되면 소스 내에 객체 참조가 되어 정의가기및 다른 기능이 된다 )					
+		. Default output folder 				
+		: .net의 bin/debug 폴더 같은 곳.				
+ - Jsp Fragment						
+	이건 뭐지? 문서타입및 언어를 선택할수 있게 되있는데??? 					
+ - Project Facets						
+	프로젝트에 관련된 설정들인듯 함. 					
+	런타임시 서버로 돌지 말지, 자바 버젼등 설정가능. 					
+ - 웹컨텐츠 설정이 있네?						
+	Web Content Settings 					
+	이거 지정하면 jsp 구식 코딩이 된거에 html tag가 색이 돌아올려나?					
+	css profile을 설정하면 tag색이 보이려나... 					
+!지정해보니 우선... jsp생성시 Doctype Page지정자가 나온다!						
+				
+ - 이클립스 FTP 접속 설정						
+	Remote System Explorer 설치					
+
+[단축키]
+정확한 들여쓰기
+Ctrl + Shift + F
+
+소스정렬
+Ctrl + Shift + M
+
+필요한 클래스, 메서드 import 추가
+Ctrl + Shift + O
+
+F3
+정의열기
+
+F4
+타입 구조 열기
+
+Ctrl + F12
+작업 열기
+
+Ctrl + F9
+작업 활성화
+
+Ctrl + L
+라인으로 이동
+
+Ctrl + Shift + Down
+이전 방법으로 이동
+
+Ctrl + Shift + Up
+다음 방법으로 이동
+
+Home
+들여 쓰기 시작으로 이동 줄의 시작으로 이동하려면 다시 홈을 누르십시오
+
+Ctrl + Home
+소스의 시작으로 이동
+
+Ctrl + End
+소스의 끝으로 이동
+
+Ctrl + Right
+한 단어를 오른쪽으로 이동
+
+Ctrl + Left
+한 단어를 왼쪽으로 이동
+
+Ctrl + H
+검색
+
+Ctrl + Shift + L
+빠른 탐색
+
+Ctrl + Shift + E
+에디터로 전환

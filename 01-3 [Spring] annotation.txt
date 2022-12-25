@@ -1,0 +1,51 @@
+[Annotation]			
+	@Autowired		
+		 - xml파일에서 namespace 를 추가하면	
+		 - xml파일에 xmlns:context="http://..../context 이 추가된다	
+		 - annotation을 사용하기 위해서는 xml에 <context:annotation-config/>를 추가해야한다	
+	@Autowired(required = false)		
+		 - 객체가 없어도 에러가 안나고 실행되게 하는 옵션	
+	`		
+		- xml에 exam1, exam2 2개가 	
+		- <bean id="exam1">, <bean id="exam2"> 2개로 정의되어있을경우	
+		- @Qualifier(exam1)을 하면 exam1을 사용한다	
+		
+Annotation			
+	@Service		
+	@Repository		
+	@Component, @value		
+	@Component("객체명")		
+		예) @Component	
+		     public class NewlecExam implements Exam {	
+			
+		     	
+		     }	
+		예) @Controller, @Service, @Repository	
+		예) @Component	
+		     class InlineExamConsole {	
+		    	
+			
+			this.exam = exam;
+			
+		     }	
+			
+		    - xml - 	
+		     <context:component-scan base-package="sping.di.ui"/>	
+		     <context:annotation-config /> /* 필요없음 */	
+		     <bean id="exam class="entity.NewlecExam" />	
+	@Autowired		
+	@Transactional		
+	@Scope		
+	
+Srping MVC Annotations			
+	@Controller		
+	@RequestMapping		
+	@PathVariable		
+	@RequestParam		
+	@ModelAttribute		
+	@SessionAttributes		
+	
+Spring Security Annotations			
+	@PreAuthorize		
+			
+	 @CrossOrigin		 '모든 도메인, 모든 요청방식' 에 대해 허용 한다는 뜻이다.
