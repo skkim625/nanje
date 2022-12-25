@@ -1,0 +1,35 @@
+- http://jquerymobile.com
+
+- www.jqmgallery.com
+
+- html5 : https://github.com/html5rocks/slides.html5rocks.com 접속
+
+- http://m.egovframe.go.kr/mguide3.5/
+
+[Device API]
+ - Accelorator
+ - GPS
+ - Vibrator
+ - Camera
+ - Contact
+ - Compass
+ - File Read/Write
+ - Network
+ - Device
+ - Media
+ - Interface
+ - NPKI
+ - Push Notifications
+ - File Opener
+ - Streaming Media
+ - Barcode scanner
+ - WebResource Update
+ - Device FileMgmt
+ - JailbreakDetection
+ - SocketIO
+ - SQLite
+ - Unzip
+ 
+ - .apk, .ipa
+ 
+ - phoneGap.js
